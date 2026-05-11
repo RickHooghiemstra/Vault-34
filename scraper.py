@@ -225,13 +225,30 @@ class PlaywrightSession:
         if not html:
             return None
         soup = BeautifulSoup(html, "lxml")
-        # Detect bot-block pages (empty body or Cloudflare challenge)
         body_text = soup.get_text(strip=True)
+
+        # Detect sandbox / network allowlist block
+        if "host not in allowlist" in body_text.lower():
+            log.error(
+                "\n\n"
+                "  NETWORK BLOCKED: This environment does not allow outbound\n"
+                "  connections to %s\n"
+                "  ('Host not in allowlist' returned at the network level).\n\n"
+                "  Run the scraper on a machine with open internet access:\n"
+                "    pip install -r requirements.txt\n"
+                "    playwright install chromium\n"
+                "    python scraper.py --playwright\n",
+                url,
+            )
+            return None
+
+        # Detect bot-block / Cloudflare challenge
         if len(body_text) < 200 and any(
             kw in body_text.lower() for kw in ("captcha", "access denied", "challenge")
         ):
             log.warning("Bot block detected on %s", url)
             return None
+
         return soup
 
 
