@@ -7,7 +7,7 @@ non-EU export pricing logic, and exports a Shopify-ready CSV.
 
 Pricing logic:
   Net Price   = Original Price / 1.21      (strip 21% Dutch VAT)
-  Final Price = Net Price * 1.30           (add 30% export markup)
+  Final Price = Net Price * 1.50           (add 50% export markup)
 
 Usage:
   pip install requests beautifulsoup4 lxml playwright
@@ -45,11 +45,10 @@ CATEGORY_PATHS = [
     "/shop/uitlaten/",
 ]
 
-VENDOR = "Akrapovič"
 OUTPUT_FILE = Path("shopify_import.csv")
 
 VAT_RATE = 1.21
-MARKUP = 1.30
+MARKUP = 1.50
 
 REQUEST_DELAY = 1.5
 MAX_RETRIES = 3
@@ -450,7 +449,7 @@ def product_to_shopify_row(p: Product) -> dict:
         "Handle": p.handle,
         "Title": p.title,
         "Body (HTML)": p.description,
-        "Vendor": VENDOR,
+        "Vendor": p.brand or "Unknown",
         "Type": p.category or "Uitlaten",
         "Tags": ", ".join(tags),
         "Published": "TRUE",
