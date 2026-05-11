@@ -2,18 +2,23 @@
 """
 Bunkerparts.nl Exhaust Scraper → Shopify CSV Exporter
 ======================================================
-Scrapes exhaust (uitlaten) products from bunkerparts.nl, applies
-non-EU export pricing logic, and exports a Shopify-ready CSV.
+Scrapes ALL exhaust products from bunkerparts.nl, applies non-EU export
+pricing, and exports a Shopify-ready CSV with structured make/model/year
+tags that power Shopify's native storefront collection filters.
 
 Pricing logic:
   Net Price   = Original Price / 1.21      (strip 21% Dutch VAT)
   Final Price = Net Price * 1.50           (add 50% export markup)
 
+Shopify filtering:
+  Tags are written as  make:Honda  model:CB650R  year:2019-2023
+  Enable them in Shopify Admin → Navigation → Collections → Filters.
+
 Usage:
-  pip install requests beautifulsoup4 lxml playwright
+  pip install -r requirements.txt
   playwright install chromium              # only needed for JS-rendered pages
-  python scraper.py                        # tries requests first, auto-falls back
-  python scraper.py --playwright           # force headless browser for every page
+  python scraper.py                        # auto-detects; falls back to Playwright
+  python scraper.py --playwright           # force headless browser
 
 Output: shopify_import.csv
 """
@@ -43,18 +48,18 @@ CATEGORY_PATHS = [
     "/categorie/uitlaten/",
     "/product-category/uitlaten/",
     "/shop/uitlaten/",
+    "/accessoires/uitlaten/",
 ]
 
 OUTPUT_FILE = Path("shopify_import.csv")
 
 VAT_RATE = 1.21
-MARKUP = 1.50
+MARKUP   = 1.50
 
-REQUEST_DELAY = 1.5
-MAX_RETRIES = 3
+REQUEST_DELAY   = 1.5
+MAX_RETRIES     = 3
 REQUEST_TIMEOUT = 20
 
-# Pre-installed Chromium paths (checked in order)
 CHROMIUM_CANDIDATES = [
     "/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell",
     "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
@@ -72,6 +77,128 @@ log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
+# Motorcycle make / model / year knowledge base
+# ---------------------------------------------------------------------------
+
+# All recognised motorcycle manufacturers — ordered longest-first so "Royal Enfield"
+# is matched before "Royal", "Harley-Davidson" before "Harley", etc.
+MOTO_MAKES: list[str] = [
+    "Harley-Davidson", "Royal Enfield", "MV Agusta", "Husqvarna",
+    "Gas Gas", "GasGas",
+    "Akrapovič", "Akrapovic",   # exhaust brands sometimes appear in titles without a make
+    "Honda", "Yamaha", "Kawasaki", "Suzuki", "BMW", "Ducati", "KTM",
+    "Triumph", "Aprilia", "Benelli", "CFMoto", "Zontes", "Indian",
+    "Beta", "Sherco", "TM Racing", "Husaberg", "SWM", "Moto Guzzi",
+    "Piaggio", "Vespa", "Kymco", "Sym", "Peugeot",
+]
+
+# Dutch and English attribute-table labels that hold make / model / year
+_MAKE_LABELS  = {"merk", "merk motor", "fabrikant", "make", "brand motor"}
+_MODEL_LABELS = {"model", "model motor", "type", "uitvoering"}
+_YEAR_LABELS  = {"bouwjaar", "jaar", "year", "jaargang", "bj"}
+
+
+def _normalise(s: str) -> str:
+    return s.strip().lower()
+
+
+def extract_mmy(soup: BeautifulSoup, title: str) -> tuple[str, str, str]:
+    """
+    Return (make, model, year) extracted from the product page.
+
+    Strategy (in priority order):
+      1. WooCommerce product-attribute table  (most reliable)
+      2. Product short-description / tab text  (sometimes listed there)
+      3. Regex against the product title       (fallback)
+    """
+    make = model = year = ""
+
+    # --- 1. Attribute table ---
+    attr_table = soup.find("table", class_=re.compile(r"woocommerce-product-attributes|shop_attributes"))
+    if attr_table:
+        for row in attr_table.find_all("tr"):
+            th = row.find("th")
+            td = row.find("td")
+            if not th or not td:
+                continue
+            label = _normalise(th.get_text())
+            value = td.get_text(separator=" ", strip=True)
+            if label in _MAKE_LABELS and not make:
+                make = value
+            elif label in _MODEL_LABELS and not model:
+                model = value
+            elif label in _YEAR_LABELS and not year:
+                year = _clean_year(value)
+
+    # --- 2. Short description / product meta ---
+    if not make or not model:
+        meta_area = soup.find("div", class_=re.compile(r"product_meta|product-meta"))
+        if meta_area:
+            for span in meta_area.find_all("span"):
+                text = span.get_text(separator=" ", strip=True)
+                for mk in MOTO_MAKES:
+                    if re.search(rf"\b{re.escape(mk)}\b", text, re.I):
+                        if not make:
+                            make = mk
+                        break
+
+    # --- 3. Regex against title ---
+    if not make or not model or not year:
+        t_make, t_model, t_year = _parse_title(title)
+        if not make:
+            make = t_make
+        if not model:
+            model = t_model
+        if not year:
+            year = t_year
+
+    return make.strip(), model.strip(), year.strip()
+
+
+def _parse_title(title: str) -> tuple[str, str, str]:
+    """Extract make, model, year purely from the product title string."""
+    make = model = year = ""
+
+    # Year: match  2019-2023  /  2021+  /  2022  (4-digit, at end or standalone)
+    year_match = re.search(r"\b(20\d{2}(?:[–\-/](?:20)?\d{2})?|\d{4}\+?)\b", title)
+    if year_match:
+        year = _clean_year(year_match.group(1))
+
+    # Make: find first known manufacturer name in title
+    for mk in MOTO_MAKES:
+        if re.search(rf"\b{re.escape(mk)}\b", title, re.I):
+            make = mk
+            # Model: the word(s) immediately after the make, up to the year or end
+            after = title[title.lower().index(mk.lower()) + len(mk):]
+            # Strip common noise words
+            after = re.sub(r"\b(abs|se|sp|rs|s|r|x|euro\s*\d|e5|e4)\b", "", after, flags=re.I)
+            model_match = re.match(
+                r"\s*([A-Z]{1,3}[\w\-\.]{0,20}(?:\s+[A-Z][\w\-\.]{0,20})?)",
+                after,
+            )
+            if model_match:
+                candidate = model_match.group(1).strip()
+                # Remove any trailing year we already captured
+                candidate = re.sub(r"\s*20\d{2}.*$", "", candidate).strip()
+                if len(candidate) >= 2:
+                    model = candidate
+            break
+
+    return make, model, year
+
+
+def _clean_year(raw: str) -> str:
+    """Normalise year strings: '2019 - 2023' → '2019-2023', '2021 +' → '2021+'."""
+    y = re.sub(r"\s*[–—]\s*", "-", raw)   # em-dash / en-dash → hyphen
+    y = re.sub(r"\s*/\s*", "-", y)         # slash → hyphen
+    y = re.sub(r"\s+\+", "+", y)           # '2021 +' → '2021+'
+    y = re.sub(r"\s+", "", y)              # remove remaining spaces
+    # Expand short year:  2019-23 → 2019-2023
+    y = re.sub(r"(20\d{2})-(\d{2})$", lambda m: f"{m.group(1)}-20{m.group(2)}", y)
+    return y.strip()
+
+
+# ---------------------------------------------------------------------------
 # Data model
 # ---------------------------------------------------------------------------
 
@@ -83,9 +210,12 @@ class Product:
     url: str = ""
     description: str = ""
     image_src: str = ""
-    brand: str = ""
-    category: str = ""
-    tags: list = field(default_factory=list)
+    brand: str = ""         # exhaust manufacturer (Akrapovič, Arrow, …)
+    category: str = ""      # breadcrumb category
+    make: str = ""          # motorcycle manufacturer (Honda, Yamaha, …)
+    model: str = ""         # motorcycle model (CB650R, MT-09, …)
+    year: str = ""          # year or range (2019-2023, 2021+, …)
+    extra_tags: list = field(default_factory=list)
 
     @property
     def net_price(self) -> float:
@@ -98,14 +228,49 @@ class Product:
     @property
     def handle(self) -> str:
         s = self.title.lower()
-        s = unicodedata.normalize("NFKD", s)
-        s = s.encode("ascii", "ignore").decode("ascii")
+        s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii")
         s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
         return s or "product"
 
+    def shopify_tags(self) -> list[str]:
+        """Build the full tag list including structured make/model/year filter tags."""
+        tags: list[str] = []
+
+        # Structured filter tags — Shopify storefront filters key on these
+        if self.make:
+            tags.append(f"make:{self.make}")
+        if self.model:
+            tags.append(f"model:{self.model}")
+        if self.year:
+            # Add one tag per individual year so  year:2021  matches a 2019-2023 range
+            for yr in _expand_years(self.year):
+                tags.append(f"year:{yr}")
+
+        # Exhaust brand tag (Akrapovič, Arrow, …)
+        if self.brand:
+            tags.append(f"brand:{self.brand}")
+
+        # Category breadcrumbs
+        tags.extend(self.extra_tags)
+
+        # Internal tracking
+        tags.append("source:bunkerparts.nl")
+
+        return tags
+
+
+def _expand_years(year_str: str) -> list[str]:
+    """'2019-2023' → ['2019','2020','2021','2022','2023'],  '2021+' → ['2021+']."""
+    m = re.match(r"(20\d{2})-(20\d{2})$", year_str)
+    if m:
+        start, end = int(m.group(1)), int(m.group(2))
+        if 2000 <= start <= end <= 2040:
+            return [str(y) for y in range(start, end + 1)]
+    return [year_str]
+
 
 # ---------------------------------------------------------------------------
-# Requests-based fetcher
+# HTTP helpers
 # ---------------------------------------------------------------------------
 
 BROWSER_HEADERS = {
@@ -147,10 +312,8 @@ def fetch_requests(session: requests.Session, url: str) -> Optional[BeautifulSou
                 return BeautifulSoup(resp.text, "lxml")
             if resp.status_code in (403, 429):
                 wait = attempt * 5
-                log.warning(
-                    "HTTP %s on %s — waiting %ds (attempt %d/%d)",
-                    resp.status_code, url, wait, attempt, MAX_RETRIES,
-                )
+                log.warning("HTTP %s on %s — waiting %ds (attempt %d/%d)",
+                            resp.status_code, url, wait, attempt, MAX_RETRIES)
                 time.sleep(wait)
             else:
                 log.warning("HTTP %s on %s", resp.status_code, url)
@@ -162,38 +325,22 @@ def fetch_requests(session: requests.Session, url: str) -> Optional[BeautifulSou
 
 
 # ---------------------------------------------------------------------------
-# Playwright-based fetcher — persistent browser across all pages
+# Playwright session — persistent browser for the full run
 # ---------------------------------------------------------------------------
 
 class PlaywrightSession:
-    """
-    Keeps a single Chromium browser + context alive for the full scrape run.
-    Use as a context manager:
-
-        with PlaywrightSession() as pw:
-            soup = pw.fetch("https://...")
-    """
-
     def __init__(self):
-        self._pw = None
-        self._browser = None
-        self._context = None
-        self._page = None
+        self._pw = self._browser = self._context = self._page = None
 
     def __enter__(self):
         from playwright.sync_api import sync_playwright
         exec_path = next((p for p in CHROMIUM_CANDIDATES if Path(p).exists()), None)
-        if exec_path:
-            log.info("Playwright using Chromium at %s", exec_path)
-        else:
-            log.info("Playwright using default Chromium")
-
+        log.info("Playwright Chromium: %s", exec_path or "default")
         self._pw = sync_playwright().start()
-        launch_kwargs = {"headless": True}
+        launch_kw = {"headless": True}
         if exec_path:
-            launch_kwargs["executable_path"] = exec_path
-
-        self._browser = self._pw.chromium.launch(**launch_kwargs)
+            launch_kw["executable_path"] = exec_path
+        self._browser = self._pw.chromium.launch(**launch_kw)
         self._context = self._browser.new_context(
             user_agent=BROWSER_HEADERS["User-Agent"],
             locale="nl-NL",
@@ -226,26 +373,19 @@ class PlaywrightSession:
         soup = BeautifulSoup(html, "lxml")
         body_text = soup.get_text(strip=True)
 
-        # Detect sandbox / network allowlist block
         if "host not in allowlist" in body_text.lower():
             log.error(
-                "\n\n"
-                "  NETWORK BLOCKED: This environment does not allow outbound\n"
-                "  connections to %s\n"
-                "  ('Host not in allowlist' returned at the network level).\n\n"
-                "  Run the scraper on a machine with open internet access:\n"
-                "    pip install -r requirements.txt\n"
-                "    playwright install chromium\n"
-                "    python scraper.py --playwright\n",
-                url,
+                "\nNETWORK BLOCKED — this sandbox does not allow outbound connections.\n"
+                "Run the scraper on a machine with open internet access:\n"
+                "  pip install -r requirements.txt && playwright install chromium\n"
+                "  python scraper.py --playwright\n"
             )
             return None
 
-        # Detect bot-block / Cloudflare challenge
         if len(body_text) < 200 and any(
             kw in body_text.lower() for kw in ("captcha", "access denied", "challenge")
         ):
-            log.warning("Bot block detected on %s", url)
+            log.warning("Bot-block detected on %s", url)
             return None
 
         return soup
@@ -256,14 +396,13 @@ class PlaywrightSession:
 # ---------------------------------------------------------------------------
 
 def _has_products(soup: BeautifulSoup) -> bool:
-    indicators = [
+    return any([
         soup.find("ul", class_=re.compile(r"products")),
         soup.find("div", class_=re.compile(r"products")),
         soup.find("li", class_=re.compile(r"product")),
         soup.find("div", class_=re.compile(r"product-item")),
         soup.find("article", class_=re.compile(r"product")),
-    ]
-    return any(indicators)
+    ])
 
 
 def find_category_url(fetcher: Callable) -> Optional[str]:
@@ -275,8 +414,7 @@ def find_category_url(fetcher: Callable) -> Optional[str]:
             log.info("Found products at %s", url)
             return url
 
-    # Discover via navigation
-    log.info("Trying to discover exhaust URL from homepage navigation")
+    log.info("Discovering exhaust URL from homepage navigation")
     soup = fetcher(BASE_URL)
     if soup:
         keywords = ["uitlaat", "exhaust", "uitlaatsysteem"]
@@ -289,27 +427,27 @@ def find_category_url(fetcher: Callable) -> Optional[str]:
                 if s and _has_products(s):
                     log.info("Discovered exhaust URL: %s", full)
                     return full
-
     return None
 
 
 def paginate(fetcher: Callable, category_url: str):
-    """Yield BeautifulSoup pages for every listing page of a WooCommerce category."""
     page_num = 1
     while True:
-        url = category_url if page_num == 1 else f"{category_url.rstrip('/')}/page/{page_num}/"
-        log.info("Fetching listing page %d: %s", page_num, url)
+        url = (category_url if page_num == 1
+               else f"{category_url.rstrip('/')}/page/{page_num}/")
+        log.info("Listing page %d: %s", page_num, url)
         soup = fetcher(url)
 
         if soup is None:
             log.warning("Failed to fetch listing page %d, stopping", page_num)
             break
 
+        # WooCommerce redirects to page 1 when you exceed the page count
         if page_num > 1:
-            current_el = soup.find("span", class_=re.compile(r"current"))
-            if current_el:
+            cur_el = soup.find("span", class_=re.compile(r"current"))
+            if cur_el:
                 try:
-                    if int(current_el.get_text(strip=True)) != page_num:
+                    if int(cur_el.get_text(strip=True)) != page_num:
                         log.info("End of pagination at page %d", page_num)
                         break
                 except ValueError:
@@ -324,14 +462,19 @@ def paginate(fetcher: Callable, category_url: str):
 
 
 def extract_product_urls(soup: BeautifulSoup, base_url: str) -> list[str]:
-    urls = set()
+    urls: set[str] = set()
+
+    # WooCommerce standard product loop
     for a in soup.select("ul.products li.product a.woocommerce-LoopProduct-link"):
         href = a.get("href", "")
         if href:
             urls.add(urljoin(base_url, href))
 
+    # Generic fallback
     if not urls:
-        for el in soup.find_all(["li", "article", "div"], class_=re.compile(r"\bproduct\b")):
+        for el in soup.find_all(
+            ["li", "article", "div"], class_=re.compile(r"\bproduct\b")
+        ):
             a = el.find("a", href=True)
             if a:
                 href = a["href"]
@@ -348,9 +491,10 @@ def extract_product_urls(soup: BeautifulSoup, base_url: str) -> list[str]:
 # Product detail parser
 # ---------------------------------------------------------------------------
 
-def parse_product(soup: BeautifulSoup, url: str) -> Optional["Product"]:
+def parse_product(soup: BeautifulSoup, url: str) -> Optional[Product]:
     p = Product(url=url)
 
+    # Title
     title_el = (
         soup.find("h1", class_=re.compile(r"product[_-]title|entry-title"))
         or soup.find("h1", itemprop="name")
@@ -358,25 +502,24 @@ def parse_product(soup: BeautifulSoup, url: str) -> Optional["Product"]:
     )
     p.title = title_el.get_text(strip=True) if title_el else _url_to_title(url)
 
+    # SKU
     sku_el = (
         soup.find("span", class_="sku")
         or soup.find(itemprop="sku")
         or soup.find("span", class_=re.compile(r"sku"))
     )
-    if sku_el:
-        p.sku = sku_el.get_text(strip=True)
-    else:
-        p.sku = urlparse(url).path.rstrip("/").split("/")[-1]
+    p.sku = sku_el.get_text(strip=True) if sku_el else urlparse(url).path.rstrip("/").split("/")[-1]
 
+    # Price — prefer sale (ins) price over regular price
     price_el = soup.find("p", class_="price") or soup.find("span", class_="price")
     if price_el:
         ins = price_el.find("ins")
-        amount_el = (ins or price_el).find("span", class_="woocommerce-Price-amount")
-        if not amount_el:
-            amount_el = (ins or price_el).find("bdi")
+        amount_el = ((ins or price_el).find("span", class_="woocommerce-Price-amount")
+                     or (ins or price_el).find("bdi"))
         if amount_el:
             p.original_price = _parse_price(amount_el.get_text(strip=True))
 
+    # Description (keep as HTML for Shopify Body field)
     desc_el = (
         soup.find("div", class_=re.compile(r"woocommerce-product-details__short-description"))
         or soup.find("div", id="tab-description")
@@ -384,11 +527,10 @@ def parse_product(soup: BeautifulSoup, url: str) -> Optional["Product"]:
     )
     p.description = str(desc_el) if desc_el else f"<p>{p.title}</p>"
 
-    img_el = soup.find(
-        ["div", "figure"], class_=re.compile(r"woocommerce-product-gallery")
-    )
-    if img_el:
-        img = img_el.find("img")
+    # Primary product image
+    img_wrap = soup.find(["div", "figure"], class_=re.compile(r"woocommerce-product-gallery"))
+    if img_wrap:
+        img = img_wrap.find("img")
         if img:
             p.image_src = img.get("data-large_image") or img.get("src", "")
     if not p.image_src:
@@ -396,21 +538,67 @@ def parse_product(soup: BeautifulSoup, url: str) -> Optional["Product"]:
         if img:
             p.image_src = img.get("data-large_image") or img.get("src", "")
 
-    brand_el = soup.find(itemprop="brand") or soup.find("span", class_=re.compile(r"brand"))
+    # Exhaust brand (Akrapovič, Arrow, SC-Project, …)
+    brand_el = (
+        soup.find(itemprop="brand")
+        or soup.find("span", class_=re.compile(r"brand"))
+    )
     if brand_el:
         p.brand = brand_el.get_text(strip=True)
 
-    breadcrumb_tags = []
+    # If brand not in structured markup, try attribute table and then title
+    if not p.brand:
+        p.brand = _brand_from_attributes(soup) or _brand_from_title(p.title)
+
+    # Breadcrumb → category & extra tags
+    breadcrumb_tags: list[str] = []
     breadcrumb = soup.find("nav", class_=re.compile(r"breadcrumb|woocommerce-breadcrumb"))
     if breadcrumb:
         for crumb in breadcrumb.find_all("a"):
             text = crumb.get_text(strip=True)
             if text and text.lower() not in ("home", "winkel", "shop"):
                 breadcrumb_tags.append(text)
-    p.tags = breadcrumb_tags or ["uitlaten"]
-    p.category = breadcrumb_tags[-1] if breadcrumb_tags else "uitlaten"
+    p.extra_tags = breadcrumb_tags
+    p.category = breadcrumb_tags[-1] if breadcrumb_tags else "Uitlaten"
+
+    # Make / model / year
+    p.make, p.model, p.year = extract_mmy(soup, p.title)
 
     return p if p.title else None
+
+
+def _brand_from_attributes(soup: BeautifulSoup) -> str:
+    """Read the exhaust brand from a WooCommerce attribute table."""
+    attr_table = soup.find(
+        "table", class_=re.compile(r"woocommerce-product-attributes|shop_attributes")
+    )
+    if not attr_table:
+        return ""
+    brand_labels = {"merk uitlaat", "uitlaat merk", "exhaust brand",
+                    "merk", "fabrikant", "brand"}
+    for row in attr_table.find_all("tr"):
+        th = row.find("th")
+        td = row.find("td")
+        if th and td and _normalise(th.get_text()) in brand_labels:
+            return td.get_text(strip=True)
+    return ""
+
+
+# Known exhaust brands — used as a fallback to pull the brand from the title
+_EXHAUST_BRANDS: list[str] = [
+    "Akrapovič", "Akrapovic", "Arrow", "SC-Project", "Leovince",
+    "LeoVince", "Yoshimura", "Remus", "Ixil", "Termignoni",
+    "Rizoma", "Vance & Hines", "Two Brothers", "Austin Racing",
+    "Hindle", "Graves Motorsports", "Spark", "Zard", "Mivv",
+    "GPR", "Scorpion", "Laser", "QD Exhaust", "Cobra",
+]
+
+
+def _brand_from_title(title: str) -> str:
+    for brand in _EXHAUST_BRANDS:
+        if re.search(rf"\b{re.escape(brand)}\b", title, re.I):
+            return brand
+    return ""
 
 
 def _url_to_title(url: str) -> str:
@@ -419,8 +607,8 @@ def _url_to_title(url: str) -> str:
 
 
 def _parse_price(raw: str) -> float:
-    cleaned = re.sub(r"[€$£\s]", "", raw)
-    if re.search(r"\d\.\d{3}", cleaned):
+    cleaned = re.sub(r"[€$£\s\xa0]", "", raw)
+    if re.search(r"\d\.\d{3}", cleaned):        # Dutch thousands separator
         cleaned = cleaned.replace(".", "")
     cleaned = cleaned.replace(",", ".")
     try:
@@ -434,42 +622,66 @@ def _parse_price(raw: str) -> float:
 # ---------------------------------------------------------------------------
 
 SHOPIFY_COLUMNS = [
-    "Handle", "Title", "Body (HTML)", "Vendor", "Type", "Tags", "Published",
-    "Option1 Name", "Option1 Value", "Variant SKU", "Variant Grams",
-    "Variant Inventory Tracker", "Variant Inventory Qty", "Variant Inventory Policy",
-    "Variant Fulfillment Service", "Variant Price", "Variant Compare At Price",
-    "Variant Taxable", "Image Src", "Image Position", "Image Alt Text",
-    "Source URL", "Original Price (incl. VAT)", "Net Price (excl. VAT)",
+    "Handle",
+    "Title",
+    "Body (HTML)",
+    "Vendor",
+    "Type",
+    "Tags",
+    "Published",
+    "Option1 Name",
+    "Option1 Value",
+    "Variant SKU",
+    "Variant Grams",
+    "Variant Inventory Tracker",
+    "Variant Inventory Qty",
+    "Variant Inventory Policy",
+    "Variant Fulfillment Service",
+    "Variant Price",
+    "Variant Compare At Price",
+    "Variant Taxable",
+    "Image Src",
+    "Image Position",
+    "Image Alt Text",
+    # --- informational columns (Shopify importer ignores unknown columns) ---
+    "Source URL",
+    "Original Price (incl. VAT)",
+    "Net Price (excl. VAT)",
+    "Motorcycle Make",
+    "Motorcycle Model",
+    "Motorcycle Year",
 ]
 
 
 def product_to_shopify_row(p: Product) -> dict:
-    tags = p.tags + ["source:bunkerparts.nl"]
     return {
-        "Handle": p.handle,
-        "Title": p.title,
-        "Body (HTML)": p.description,
-        "Vendor": p.brand or "Unknown",
-        "Type": p.category or "Uitlaten",
-        "Tags": ", ".join(tags),
-        "Published": "TRUE",
-        "Option1 Name": "Title",
-        "Option1 Value": "Default Title",
-        "Variant SKU": p.sku,
-        "Variant Grams": "5000",
-        "Variant Inventory Tracker": "shopify",
-        "Variant Inventory Qty": "1",
-        "Variant Inventory Policy": "deny",
+        "Handle":                      p.handle,
+        "Title":                       p.title,
+        "Body (HTML)":                 p.description,
+        "Vendor":                      p.brand or "Unknown",
+        "Type":                        p.category or "Uitlaten",
+        "Tags":                        ", ".join(p.shopify_tags()),
+        "Published":                   "TRUE",
+        "Option1 Name":                "Title",
+        "Option1 Value":               "Default Title",
+        "Variant SKU":                 p.sku,
+        "Variant Grams":               "5000",
+        "Variant Inventory Tracker":   "shopify",
+        "Variant Inventory Qty":       "1",
+        "Variant Inventory Policy":    "deny",
         "Variant Fulfillment Service": "manual",
-        "Variant Price": f"{p.final_price:.2f}",
-        "Variant Compare At Price": "",
-        "Variant Taxable": "FALSE",
-        "Image Src": p.image_src,
-        "Image Position": "1",
-        "Image Alt Text": p.title,
-        "Source URL": p.url,
-        "Original Price (incl. VAT)": f"{p.original_price:.2f}",
-        "Net Price (excl. VAT)": f"{p.net_price:.2f}",
+        "Variant Price":               f"{p.final_price:.2f}",
+        "Variant Compare At Price":    "",
+        "Variant Taxable":             "FALSE",
+        "Image Src":                   p.image_src,
+        "Image Position":              "1",
+        "Image Alt Text":              p.title,
+        "Source URL":                  p.url,
+        "Original Price (incl. VAT)":  f"{p.original_price:.2f}",
+        "Net Price (excl. VAT)":       f"{p.net_price:.2f}",
+        "Motorcycle Make":             p.make,
+        "Motorcycle Model":            p.model,
+        "Motorcycle Year":             p.year,
     }
 
 
@@ -485,36 +697,6 @@ def export_csv(products: list[Product], output: Path) -> None:
 # ---------------------------------------------------------------------------
 # Main orchestration
 # ---------------------------------------------------------------------------
-
-def scrape(use_playwright: bool = False) -> list[Product]:
-    products: list[Product] = []
-    seen_urls: set[str] = set()
-
-    if use_playwright:
-        log.info("Starting Playwright session (persistent browser)")
-        pw_session = PlaywrightSession().__enter__()
-
-        def fetcher(url: str) -> Optional[BeautifulSoup]:
-            return pw_session.fetch(url)
-
-        try:
-            _run_scrape(fetcher, products, seen_urls)
-        finally:
-            pw_session.__exit__(None, None, None)
-    else:
-        session = make_session()
-
-        def fetcher(url: str) -> Optional[BeautifulSoup]:
-            return fetch_requests(session, url)
-
-        _run_scrape(fetcher, products, seen_urls)
-
-        if not products:
-            log.warning("No products via requests — retrying with Playwright")
-            return scrape(use_playwright=True)
-
-    return products
-
 
 def _run_scrape(
     fetcher: Callable,
@@ -537,7 +719,7 @@ def _run_scrape(
                 continue
             seen_urls.add(prod_url)
 
-            log.info("Scraping product: %s", prod_url)
+            log.info("Scraping: %s", prod_url)
             detail_soup = fetcher(prod_url)
             if detail_soup is None:
                 log.warning("Skipping (failed to load): %s", prod_url)
@@ -548,21 +730,40 @@ def _run_scrape(
                 log.warning("Could not parse product at %s", prod_url)
                 continue
             if product.original_price == 0:
-                log.warning("No price found for '%s' — skipping", product.title)
+                log.warning("No price for '%s' — skipping", product.title)
                 continue
 
             products.append(product)
             log.info(
-                "  %-55s  €%7.2f → export €%7.2f",
-                product.title[:55],
+                "  %-48s  make=%-10s model=%-12s  €%7.2f → €%7.2f",
+                product.title[:48],
+                product.make[:10] if product.make else "-",
+                product.model[:12] if product.model else "-",
                 product.original_price,
                 product.final_price,
             )
 
 
+def scrape(use_playwright: bool = False) -> list[Product]:
+    products: list[Product] = []
+    seen_urls: set[str] = set()
+
+    if use_playwright:
+        with PlaywrightSession() as pw:
+            _run_scrape(pw.fetch, products, seen_urls)
+    else:
+        session = make_session()
+        _run_scrape(lambda url: fetch_requests(session, url), products, seen_urls)
+        if not products:
+            log.warning("No products via requests — retrying with Playwright")
+            return scrape(use_playwright=True)
+
+    return products
+
+
 def main():
     log.info("=== Bunkerparts.nl Exhaust Scraper ===")
-    log.info("VAT removal: /%.2f   Export markup: x%.2f", VAT_RATE, MARKUP)
+    log.info("VAT: /%.2f   Markup: ×%.2f", VAT_RATE, MARKUP)
 
     products = scrape(use_playwright=False)
 
@@ -572,29 +773,27 @@ def main():
 
     export_csv(products, OUTPUT_FILE)
 
-    print(f"\n{'='*72}")
-    print(f"{'PRODUCT':<47} {'ORIG':>8} {'NET':>8} {'EXPORT':>9}")
-    print(f"{'-'*72}")
+    print(f"\n{'='*88}")
+    print(f"{'PRODUCT':<44} {'MAKE':<11} {'MODEL':<13} {'ORIG':>8} {'EXPORT':>9}")
+    print(f"{'-'*88}")
     for p in products:
         print(
-            f"{p.title[:46]:<47} "
+            f"{p.title[:43]:<44} "
+            f"{(p.make or '-')[:10]:<11} "
+            f"{(p.model or '-')[:12]:<13} "
             f"€{p.original_price:>7.2f} "
-            f"€{p.net_price:>7.2f} "
             f"€{p.final_price:>8.2f}"
         )
-    print(f"{'='*72}")
-    print(f"Total products exported: {len(products)}")
-    print(f"Output file: {OUTPUT_FILE.resolve()}")
+    print(f"{'='*88}")
+    print(f"Total: {len(products)} products  →  {OUTPUT_FILE.resolve()}")
 
 
 if __name__ == "__main__":
     import sys
-    if "--playwright" in sys.argv:
+    use_pw = "--playwright" in sys.argv
+    if use_pw:
         log.info("Force-Playwright mode")
-        products = scrape(use_playwright=True)
-    else:
-        products = scrape(use_playwright=False)
-
+    products = scrape(use_playwright=use_pw)
     if products:
         export_csv(products, OUTPUT_FILE)
         print(f"\nTotal: {len(products)} products → {OUTPUT_FILE}")
