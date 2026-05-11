@@ -85,7 +85,6 @@ log = logging.getLogger(__name__)
 MOTO_MAKES: list[str] = [
     "Harley-Davidson", "Royal Enfield", "MV Agusta", "Husqvarna",
     "Gas Gas", "GasGas",
-    "Akrapovič", "Akrapovic",   # exhaust brands sometimes appear in titles without a make
     "Honda", "Yamaha", "Kawasaki", "Suzuki", "BMW", "Ducati", "KTM",
     "Triumph", "Aprilia", "Benelli", "CFMoto", "Zontes", "Indian",
     "Beta", "Sherco", "TM Racing", "Husaberg", "SWM", "Moto Guzzi",
@@ -160,26 +159,33 @@ def _parse_title(title: str) -> tuple[str, str, str]:
     make = model = year = ""
 
     # Year: match  2019-2023  /  2021+  /  2022  (4-digit, at end or standalone)
-    year_match = re.search(r"\b(20\d{2}(?:[–\-/](?:20)?\d{2})?|\d{4}\+?)\b", title)
+    # "2021+" alternative must come BEFORE bare "20\d{2}" to avoid early match
+    year_match = re.search(r"(?<!\d)(20\d{2}\+|20\d{2}[–\-/](?:20)?\d{2}|20\d{2})(?!\d)", title)
     if year_match:
         year = _clean_year(year_match.group(1))
 
-    # Make: find first known manufacturer name in title
+    # Make: find first known MOTORCYCLE manufacturer name in title.
+    # MOTO_MAKES intentionally excludes exhaust brand names (Akrapovič, Arrow, etc.)
+    # so that "Akrapovic Slip-On Honda CB650R" correctly yields make=Honda.
     for mk in MOTO_MAKES:
         if re.search(rf"\b{re.escape(mk)}\b", title, re.I):
             make = mk
             # Model: the word(s) immediately after the make, up to the year or end
-            after = title[title.lower().index(mk.lower()) + len(mk):]
-            # Strip common noise words
-            after = re.sub(r"\b(abs|se|sp|rs|s|r|x|euro\s*\d|e5|e4)\b", "", after, flags=re.I)
+            mk_pos = title.lower().index(mk.lower())
+            after = title[mk_pos + len(mk):]
+            # Strip common suffix noise words and leading punctuation/spaces
+            after = re.sub(r"^\s*[-–—/]\s*", "", after)
+            after = re.sub(r"\b(abs|se|sp|rs|euro\s*\d|e5|e4)\b", "", after, flags=re.I)
             model_match = re.match(
-                r"\s*([A-Z]{1,3}[\w\-\.]{0,20}(?:\s+[A-Z][\w\-\.]{0,20})?)",
+                r"\s*([A-Z0-9]{1,4}[\w\-\.]{0,25}(?:\s+[A-Z0-9][\w\-\.]{0,20})?)",
                 after,
             )
             if model_match:
                 candidate = model_match.group(1).strip()
                 # Remove any trailing year we already captured
                 candidate = re.sub(r"\s*20\d{2}.*$", "", candidate).strip()
+                # Remove trailing noise characters
+                candidate = candidate.rstrip("-–—/., ")
                 if len(candidate) >= 2:
                     model = candidate
             break
@@ -260,12 +266,30 @@ class Product:
 
 
 def _expand_years(year_str: str) -> list[str]:
-    """'2019-2023' → ['2019','2020','2021','2022','2023'],  '2021+' → ['2021+']."""
+    """
+    '2019-2023' → ['2019','2020','2021','2022','2023']
+    '2021+'     → ['2021','2022','2023','2024','2025','2026', '2021+']
+    '2022'      → ['2022']
+    """
+    import datetime
+    current_year = datetime.date.today().year
+
+    # Range: 2019-2023
     m = re.match(r"(20\d{2})-(20\d{2})$", year_str)
     if m:
         start, end = int(m.group(1)), int(m.group(2))
         if 2000 <= start <= end <= 2040:
             return [str(y) for y in range(start, end + 1)]
+
+    # Open-ended: 2021+
+    m = re.match(r"(20\d{2})\+$", year_str)
+    if m:
+        start = int(m.group(1))
+        if 2000 <= start <= current_year:
+            years = [str(y) for y in range(start, current_year + 1)]
+            years.append(year_str)  # keep "2021+" tag for exact-match filtering
+            return years
+
     return [year_str]
 
 
@@ -366,6 +390,15 @@ class PlaywrightSession:
         except Exception as exc:
             log.warning("Playwright error on %s: %s", url, exc)
             return None
+
+        # Scroll to bottom to trigger lazy-loaded gallery images, then back up
+        try:
+            self._page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            self._page.wait_for_timeout(800)
+            self._page.evaluate("window.scrollTo(0, 0)")
+            self._page.wait_for_timeout(300)
+        except Exception:
+            pass
 
         html = self._page.content()
         if not html:
@@ -527,16 +560,41 @@ def parse_product(soup: BeautifulSoup, url: str) -> Optional[Product]:
     )
     p.description = str(desc_el) if desc_el else f"<p>{p.title}</p>"
 
-    # Primary product image
+    # Primary product image — check all lazy-load attributes in priority order
+    _PLACEHOLDER = "s.w.org"  # lazy-load SVG placeholder domain
+
+    def _best_img_src(img_el) -> str:
+        for attr in ("data-large_image", "data-src", "data-lazy-src", "data-original", "src"):
+            val = img_el.get(attr, "")
+            if val and _PLACEHOLDER not in val and not val.startswith("data:"):
+                return val
+        return ""
+
     img_wrap = soup.find(["div", "figure"], class_=re.compile(r"woocommerce-product-gallery"))
     if img_wrap:
-        img = img_wrap.find("img")
-        if img:
-            p.image_src = img.get("data-large_image") or img.get("src", "")
+        # Try the anchor href first (links to full-size image)
+        a = img_wrap.find("a", class_=re.compile(r"woocommerce-product-gallery__trigger|zoom"))
+        if not a:
+            a = img_wrap.find("a", href=re.compile(r"\.(jpe?g|png|webp)", re.I))
+        if a and a.get("href", "") and _PLACEHOLDER not in a["href"]:
+            p.image_src = a["href"]
+        if not p.image_src:
+            img = img_wrap.find("img")
+            if img:
+                p.image_src = _best_img_src(img)
     if not p.image_src:
         img = soup.find("img", class_=re.compile(r"wp-post-image|attachment-woocommerce"))
         if img:
-            p.image_src = img.get("data-large_image") or img.get("src", "")
+            p.image_src = _best_img_src(img)
+    if not p.image_src:
+        # Last resort: any img inside the product summary with a real URL
+        summary = soup.find("div", class_=re.compile(r"summary|product-summary"))
+        if summary:
+            for img in summary.find_all("img"):
+                src = _best_img_src(img)
+                if src:
+                    p.image_src = src
+                    break
 
     # Exhaust brand (Akrapovič, Arrow, SC-Project, …)
     brand_el = (
