@@ -178,12 +178,29 @@ def get_page_playwright(url: str) -> Optional[BeautifulSoup]:
         )
         return None
 
+    # Try to find a locally installed Chromium if the default path is missing
+    _chromium_candidates = [
+        "/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell",
+        "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
+        "/usr/bin/google-chrome",
+    ]
+    _exec_path = next(
+        (p for p in _chromium_candidates if Path(p).exists()), None
+    )
+
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=True)
+        launch_kwargs = {"headless": True}
+        if _exec_path:
+            launch_kwargs["executable_path"] = _exec_path
+            log.info("Using Chromium at %s", _exec_path)
+        browser = pw.chromium.launch(**launch_kwargs)
         ctx = browser.new_context(
             user_agent=BROWSER_HEADERS["User-Agent"],
             locale="nl-NL",
             viewport={"width": 1280, "height": 900},
+            ignore_https_errors=True,
         )
         page = ctx.new_page()
         try:
