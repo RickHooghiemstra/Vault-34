@@ -191,8 +191,22 @@ def _apply_dom(soup: BeautifulSoup, page_url: str, p: dict) -> None:
             break
     _set_if_empty(p, "description_nl", desc_html or desc_text)
 
-    price_text = first_text(SELECTORS["price"])
-    _set_price_if_empty(p, price_text)
+    # Price: collect all candidate values, exclude old-price wrappers, take the minimum
+    price_candidates: list[float] = []
+    seen_price_els: set[int] = set()
+    for sel in SELECTORS["price"]:
+        for el in soup.select(sel):
+            if id(el) in seen_price_els:
+                continue
+            seen_price_els.add(id(el))
+            # Skip if inside an .old-price or [data-price-type=oldPrice] wrapper
+            if el.find_parent(class_="old-price") or el.find_parent(attrs={"data-price-type": "oldPrice"}):
+                continue
+            val = _parse_price(el.get_text(strip=True))
+            if val > 0:
+                price_candidates.append(val)
+    if price_candidates:
+        _set_price_if_empty(p, min(price_candidates))
 
     # Images from DOM
     for sel in SELECTORS["images"]:
@@ -240,6 +254,9 @@ def _set_if_empty(p: dict, key: str, value: str) -> None:
 
 def _set_price_if_empty(p: dict, raw: object) -> None:
     if p["price_raw"]:
+        return
+    if isinstance(raw, float) and raw > 0:
+        p["price_raw"] = raw
         return
     price = _parse_price(str(raw) if raw else "")
     if price:
