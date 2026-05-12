@@ -77,7 +77,14 @@ IMAGE_SKIP_PATTERNS = ["/logo", "/icon", "/banner", "/placeholder", "s.w.org", "
 SELECTORS = {
     # Confirmed working against uitlaatstore.nl via --discover
     "title":       ["h1", "[itemprop='name']"],
-    "price":       [".special-price .price", ".price ins .amount", ".price ins", ".price"],
+    "price":       [
+        "[data-price-type='finalPrice'] .price",  # Magento 2 final price
+        ".price-final_price .price",              # Magento 2 alt
+        ".special-price .price",                  # sale price wrapper
+        ".price ins .amount",                     # WooCommerce sale
+        ".price ins",
+        ".price",                                 # last resort: first price on page
+    ],
     "sku":         ["[itemprop='sku']", ".sku"],
     "description": ["[class*='description'] .value", "[class*='description']"],
     "brand":       ["[itemprop='brand'] [itemprop='name']", "[itemprop='brand']"],

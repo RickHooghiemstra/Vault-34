@@ -224,11 +224,18 @@ def discover_selectors(soup: BeautifulSoup) -> None:
     """
     fields = {
         "title":       ["h1", "[itemprop='name']"],
-        "price":       ["[itemprop='price']", ".price", "[class*='price']"],
-        "sku":         ["[itemprop='sku']", ".sku", "[class*='sku']", "[class*='product-id']"],
+        "price":       [
+            "[data-price-type='finalPrice'] .price",
+            ".price-final_price .price",
+            ".special-price .price",
+            ".price ins",
+            ".price",
+            "[class*='price']",
+        ],
+        "sku":         ["[itemprop='sku']", ".sku", "[class*='sku']"],
         "description": ["[itemprop='description']", "[class*='description']", ".product-description"],
         "brand":       ["[itemprop='brand']", "[class*='brand']"],
-        "images":      ["img[src*='product']", ".gallery img", "[class*='image'] img"],
+        "images":      ["img[src*='/media/catalog/product/']", "img[src*='product']", ".gallery img"],
         "breadcrumb":  ["nav a", ".breadcrumb a", "[class*='breadcrumb'] a"],
     }
 
