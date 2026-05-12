@@ -4,7 +4,7 @@ echo.
 echo === Pulling latest code ===
 git pull origin claude/scrape-motorcycle-exhausts-FHcwH
 echo.
-echo === Scraping Akrapovic ===
-python main.py --brands akrapovic
+echo === Scraping all top brands ===
+python main.py --all-brands
 echo.
 pause
