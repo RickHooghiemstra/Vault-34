@@ -47,30 +47,54 @@ shopify_exports/shopify_import.csv  ← Import in Shopify Admin → Products →
 
 ---
 
-## Quick Start
+## Quick Start (Windows)
 
-```bash
-# 1. Clone and install
-git clone <repo-url> && cd Vault-34
+```cmd
+cd C:\path\to\Vault-34
 pip install -r requirements.txt
-playwright install chromium
-
-# 2. Configure environment
-cp .env.example .env
-# Edit .env: set ANTHROPIC_API_KEY=sk-ant-...
-
-# 3. Run selector discovery (first time — validates the scraper can read the site)
-python main.py --discover --url https://www.uitlaatstore.nl/s-k6r14-hegeht1
-
-# 4. Scrape top brands
-python main.py --brands akrapovic,arrow,sc-project
-
-# 5. Import into Shopify
-# Shopify Admin → Products → Import → shopify_exports/shopify_import.csv
+python -m playwright install chromium
+copy .env.example .env
+notepad .env
 ```
+
+Edit `.env` and set `ANTHROPIC_API_KEY=sk-ant-...`, then:
+
+```cmd
+run.bat
+```
+
+`run.bat` pulls the latest code and runs the full scrape automatically.
 
 > **IMPORTANT:** uitlaatstore.nl blocks all datacenter/cloud IPs.  
 > Run from a **home or office internet connection**, or set `PROXY_URL` in `.env`.
+
+---
+
+## Quick Start (macOS / Linux)
+
+```bash
+git clone <repo-url> && cd Vault-34
+pip install -r requirements.txt
+playwright install chromium
+cp .env.example .env
+# Edit .env: set ANTHROPIC_API_KEY=sk-ant-...
+
+python main.py --discover --url https://www.uitlaatstore.nl/s-k6r14-hegeht1
+python main.py --all-brands
+```
+
+---
+
+## CLI Reference
+
+```
+python main.py --all-brands                    # scrape all 16 top brands
+python main.py --brands akrapovic,arrow        # scrape specific brands
+python main.py --discover --url <url>          # inspect what the parser extracts
+python main.py --brands akrapovic --skip-translate   # keep Dutch descriptions
+python main.py --brands akrapovic --skip-validate    # skip image validation
+python main.py --from-cache logs/raw_products.json   # re-run pipeline from cache
+```
 
 ---
 
@@ -86,13 +110,24 @@ brand-scoped crawls that can be resumed independently.
 |---|---|
 | `discover_product_urls()` | Paginates brand listing, collects product URLs |
 | Checkpoint file | `logs/checkpoint_{brand}.json` — resume interrupted scrapes |
-| `fetch()` | Requests + browser headers, 2 s delay, 3 retries with back-off |
+| `fetch()` | Requests with browser headers, 2 s delay, 3 retries with back-off |
 | WAF detection | Immediately aborts with clear message if blocked |
+
+### Resuming an interrupted scrape
+
+Just run `run.bat` (or `python main.py --all-brands`) again. Checkpoint files are saved per brand after URL discovery. If a brand's checkpoint exists, URL discovery is skipped and scraping resumes from that list.
+
+To force a fresh discovery, delete `logs/checkpoint_{brand}.json`.
 
 ### Configurable brands
 
-Edit `config/brands.py → TOP_BRANDS` to add or reorder brands.  
-Run all brands with `--all-brands`, or target specific ones with `--brands akrapovic,arrow`.
+Top brands list lives in `config/brands.py → TOP_BRANDS`:
+
+```
+akrapovic, arrow, sc-project, mivv, yoshimura, leovince,
+remus, gpr, termignoni, ixil, spark, zard, scorpion,
+laser, racefit, austin-racing
+```
 
 ---
 
@@ -100,12 +135,12 @@ Run all brands with `--all-brands`, or target specific ones with `--brands akrap
 
 ### Pricing
 
-| Step | Formula | Example (€649 RRP) |
+| Step | Formula | Example (€1.014 sale price) |
 |---|---|---|
-| Strip Dutch VAT (21%) | `Net = Price / 1.21` | €536.36 |
-| Export markup (50%) | `Export = Net × 1.50` | **€804.55** |
+| Strip Dutch VAT (21%) | `Net = Price / 1.21` | €838.02 |
+| Export markup (50%) | `Export = Net × 1.50` | **€1.257,03** |
 
-`Variant Taxable = FALSE` — no VAT charged to non-EU customers at checkout.
+The scraper always extracts the **current selling price** (sale price when on offer, regular price otherwise). `Variant Taxable = FALSE` — no VAT charged to non-EU customers at checkout.
 
 ### Fitment extraction (make / model / year)
 
@@ -161,6 +196,9 @@ Every image URL is validated before export:
 3. Partial GET — Pillow checks pixel dimensions ≥ 800 px on either axis
 4. Path filter — skips URLs containing `/logo`, `/icon`, `/banner`, `s.w.org`, `data:`
 
+Magento cache URLs (`/media/catalog/product/cache/{hash}/...`) are automatically
+stripped to their full-resolution originals before validation.
+
 Products with **0 valid images** are written to `logs/missing_images.json` and **excluded** from the import CSV.
 
 Skip image validation with `--skip-validate` (not recommended for production imports).
@@ -169,25 +207,23 @@ Skip image validation with `--skip-validate` (not recommended for production imp
 
 ## Shopify Import Workflow
 
-1. Run the pipeline: `python main.py --brands akrapovic,arrow`
+1. Run the pipeline: `run.bat` or `python main.py --all-brands`
 2. Review `logs/qa_report.json` — check for flagged products
 3. Open **Shopify Admin → Products → Import**
 4. Upload `shopify_exports/shopify_import.csv`
-5. After import, create smart collections (see Collection Strategy below)
+5. Smart collections are already created in Shopify and auto-populate from tags
 
-### Collection Strategy
+### Output files
 
-Create Shopify smart collections using `tag = {tag_value}` rules:
-
-| Collection | Rule |
+| File | Description |
 |---|---|
-| Akrapovic | `tag = BRAND_Akrapovic` |
-| Honda Exhausts | `tag = MAKE_Honda` |
-| Slip-On Exhausts | `tag = TYPE_SlipOn` |
-| Full Systems | `tag = TYPE_FullSystem` |
-| Street Legal | `tag = HOMOLOGATED` |
-| Race Use Only | `tag = RACE_ONLY` |
-| Euro 5 Certified | `tag = EURO_5` |
+| `shopify_exports/shopify_import.csv` | Upload this to Shopify |
+| `shopify_exports/image_manifest.json` | All validated image URLs per SKU |
+| `logs/qa_report.json` | Per-product quality flags |
+| `logs/missing_images.json` | Products excluded (no valid images) |
+| `logs/failed_scrape.json` | URLs that failed after all retries |
+| `logs/duplicates.json` | Deduplicated products |
+| `logs/raw_products.json` | Raw scraped data before transformation |
 
 ---
 
@@ -206,15 +242,19 @@ REQUEST_TIMEOUT = 20
 PROXY_URL = ""         # optional residential proxy
 ```
 
-DOM CSS selectors (tune with `--discover`):
+DOM CSS selectors (confirmed working against uitlaatstore.nl Magento 2 structure):
 
 ```python
 SELECTORS = {
-    "title":       ["h1.product-title", "h1[itemprop='name']", "h1"],
-    "price":       [".product-price .price", "[itemprop='price']", ...],
-    ...
+    "title":       ["h1", "[itemprop='name']"],
+    "price":       ["[data-price-type='finalPrice'] .price", ".price-final_price .price", ".price"],
+    "sku":         ["[itemprop='sku']", ".sku"],
+    "description": ["[class*='description'] .value", "[class*='description']"],
+    "images":      ["img[src*='/media/catalog/product/']"],
 }
 ```
+
+Run `python main.py --discover --url <product_url>` to verify selectors and inspect what the parser extracts.
 
 ---
 
@@ -222,7 +262,7 @@ SELECTORS = {
 
 ```bash
 python -m pytest tests/ -v
-# 46 tests, covers: fitment parsing, price math, tag generation, SEO fields
+# 46 tests: fitment parsing, price math, tag generation, SEO fields
 ```
 
 ---
@@ -252,6 +292,7 @@ Vault-34/
 ├── logs/             Runtime logs + QA reports (gitignored)
 ├── images/           Image validation cache (gitignored)
 ├── main.py           CLI entry point
+├── run.bat           Windows one-click scrape script
 ├── requirements.txt  Python dependencies
 ├── .env.example      Environment variable template
 └── .gitignore
@@ -264,12 +305,15 @@ Vault-34/
 | Problem | Fix |
 |---|---|
 | `NETWORK BLOCKED` / HTTP 403 | Run from a home/office IP, or set `PROXY_URL` in `.env` |
+| Binary garbage in page output | Brotli encoding issue — already fixed (Accept-Encoding: gzip, deflate) |
+| `UnicodeEncodeError` on Windows | Already fixed — all file writes use `encoding="utf-8"` |
 | `ANTHROPIC_API_KEY not set` | Add API key to `.env`, or use `--skip-translate` |
+| `logs/` directory not found | Run `mkdir logs` and `mkdir images` once before first run |
 | 0 product URLs for brand | Check the brand slug matches `/alle-merken/{slug}` on uitlaatstore.nl |
-| Price shows `0.00` | JSON-LD / OpenGraph / DOM selectors all missed the price — run `--discover` |
+| Price shows `0.00` | Run `--discover` to inspect what the page returns for price |
 | Make/model/year blank | Title regex couldn't match — check `config/makes.py MOTO_MAKES` |
-| Image validation slow | Normal — each image requires a network request. Expect ~1–2 s/image |
-| `Pillow not found` | `pip install Pillow` |
+| Image validation slow | Normal — each image requires a network request (~1–2 s/image) |
+| `playwright` not found on Windows | Use `python -m playwright install chromium` |
 
 ---
 
