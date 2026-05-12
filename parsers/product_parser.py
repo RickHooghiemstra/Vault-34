@@ -133,8 +133,10 @@ def _apply_json_ld(soup: BeautifulSoup, p: dict) -> None:
                 imgs = [imgs]
             for img in imgs:
                 url_val = img.get("url", img) if isinstance(img, dict) else img
-                if isinstance(url_val, str) and _is_valid_image_url(url_val):
-                    p["images"].append(url_val)
+                if isinstance(url_val, str):
+                    url_val = _strip_magento_cache(url_val)
+                    if _is_valid_image_url(url_val):
+                        p["images"].append(url_val)
 
             return   # First Product node wins
 
@@ -204,6 +206,7 @@ def _apply_dom(soup: BeautifulSoup, page_url: str, p: dict) -> None:
             )
             if src:
                 full = urljoin(f"{base.scheme}://{base.netloc}", src)
+                full = _strip_magento_cache(full)
                 if _is_valid_image_url(full) and full not in p["images"]:
                     p["images"].append(full)
 
@@ -267,7 +270,16 @@ def _is_valid_image_url(url: str) -> bool:
     for pattern in IMAGE_SKIP_PATTERNS:
         if pattern in url:
             return False
-    return bool(re.search(r"\.(jpe?g|png|webp|gif)(\?|$)", url, re.I))
+    # Magento cache URLs embed the extension mid-path (e.g. /cache/.../photo.jpg/...)
+    return bool(re.search(r"\.(jpe?g|png|webp|gif)", url, re.I))
+
+
+_MAGENTO_CACHE_RE = re.compile(r"/cache/[a-f0-9]{32}/")
+
+
+def _strip_magento_cache(url: str) -> str:
+    """Convert a Magento cache URL to the original full-resolution path."""
+    return _MAGENTO_CACHE_RE.sub("/", url)
 
 
 def _deduplicate_images(images: list[str]) -> list[str]:

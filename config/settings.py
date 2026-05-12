@@ -75,13 +75,14 @@ IMAGE_SKIP_PATTERNS = ["/logo", "/icon", "/banner", "/placeholder", "s.w.org", "
 # ---------------------------------------------------------------------------
 
 SELECTORS = {
-    "title":       ["h1.product-title", "h1[itemprop='name']", "h1"],
-    "price":       [".product-price .price", "[itemprop='price']", ".price"],
-    "sku":         [".product-sku", "[itemprop='sku']", ".sku"],
-    "description": [".product-description", "[itemprop='description']", ".description"],
-    "brand":       ["[itemprop='brand']", ".product-brand", ".brand"],
-    "images":      [".product-images img", ".gallery img", "[itemprop='image']"],
-    "breadcrumb":  [".breadcrumb a", "nav.breadcrumb a", ".breadcrumbs a"],
+    # Confirmed working against uitlaatstore.nl via --discover
+    "title":       ["h1", "[itemprop='name']"],
+    "price":       [".special-price .price", ".price ins .amount", ".price ins", ".price"],
+    "sku":         ["[itemprop='sku']", ".sku"],
+    "description": ["[class*='description'] .value", "[class*='description']"],
+    "brand":       ["[itemprop='brand'] [itemprop='name']", "[itemprop='brand']"],
+    "images":      ["img[src*='/media/catalog/product/']", "img[data-src*='/media/catalog/product/']"],
+    "breadcrumb":  ["nav a", ".breadcrumb a", ".breadcrumbs a"],
     "fitment":     [".product-fitment", ".compatibility-table", ".fitment"],
 }
 
