@@ -132,7 +132,7 @@ def discover_product_urls(
     urls: list[str] = []
 
     if checkpoint_file and checkpoint_file.exists():
-        urls = json.loads(checkpoint_file.read_text())
+        urls = json.loads(checkpoint_file.read_text(encoding="utf-8"))
         log.info(
             "Resumed %d URLs from checkpoint: %s", len(urls), checkpoint_file
         )
@@ -172,7 +172,7 @@ def discover_product_urls(
         offset += PAGE_SIZE
 
     if checkpoint_file:
-        checkpoint_file.write_text(json.dumps(urls, indent=2))
+        checkpoint_file.write_text(json.dumps(urls, indent=2), encoding="utf-8")
         log.info("Saved %d URLs → %s", len(urls), checkpoint_file)
 
     return urls

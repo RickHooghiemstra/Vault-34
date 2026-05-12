@@ -91,7 +91,7 @@ def export(products: list[dict]) -> Path:
     log.info("Exported %d products (%d rows) → %s", len(products), len(rows), OUTPUT_CSV)
 
     # Write image manifest
-    IMAGE_MANIFEST.write_text(json.dumps(manifest, indent=2, ensure_ascii=False))
+    IMAGE_MANIFEST.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     log.info("Image manifest → %s", IMAGE_MANIFEST)
 
     return OUTPUT_CSV

@@ -157,5 +157,5 @@ def _write_missing_report(products: list[dict]) -> None:
         for p in products
     ]
     path = LOGS_DIR / "missing_images.json"
-    path.write_text(json.dumps(report, indent=2, ensure_ascii=False))
+    path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     log.warning("Wrote %d products with missing images → %s", len(products), path)

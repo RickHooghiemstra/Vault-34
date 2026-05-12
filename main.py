@@ -273,7 +273,7 @@ def main() -> None:
     if args.from_cache:
         cache_path = Path(args.from_cache)
         log.info("Loading products from cache: %s", cache_path)
-        products = json.loads(cache_path.read_text())
+        products = json.loads(cache_path.read_text(encoding="utf-8"))
     else:
         products = step_scrape(brands)
 
@@ -283,7 +283,7 @@ def main() -> None:
 
     # Save raw cache
     raw_cache = Path("logs/raw_products.json")
-    raw_cache.write_text(json.dumps(products, ensure_ascii=False, indent=2))
+    raw_cache.write_text(json.dumps(products, ensure_ascii=False, indent=2), encoding="utf-8")
     log.info("Raw products cached → %s", raw_cache)
 
     # Pipeline
@@ -309,7 +309,7 @@ def main() -> None:
 def _write_log(filename: str, data: object) -> None:
     from config.settings import LOGS_DIR
     path = LOGS_DIR / filename
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":

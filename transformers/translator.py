@@ -35,14 +35,14 @@ def _load_cache() -> None:
     global _cache
     if TRANSLATION_CACHE.exists():
         try:
-            _cache = json.loads(TRANSLATION_CACHE.read_text())
+            _cache = json.loads(TRANSLATION_CACHE.read_text(encoding="utf-8"))
             log.info("Loaded %d cached translations", len(_cache))
         except (json.JSONDecodeError, OSError):
             _cache = {}
 
 
 def _save_cache() -> None:
-    TRANSLATION_CACHE.write_text(json.dumps(_cache, ensure_ascii=False, indent=2))
+    TRANSLATION_CACHE.write_text(json.dumps(_cache, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _cache_key(text: str) -> str:
