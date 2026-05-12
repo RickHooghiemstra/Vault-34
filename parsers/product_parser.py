@@ -48,6 +48,7 @@ def parse_product(soup: BeautifulSoup, url: str) -> Optional[dict]:
         "availability":    "",
         "weight_grams":    5000,
         "json_ld":         {},
+        "_price_candidates": [],   # collects all prices; min taken at end
     }
 
     # --- Strategy 1: JSON-LD ---
@@ -58,6 +59,11 @@ def parse_product(soup: BeautifulSoup, url: str) -> Optional[dict]:
 
     # --- Strategy 3: DOM selectors ---
     _apply_dom(soup, url, p)
+
+    # Final price: take the minimum of all candidates (sale price < list price)
+    candidates = [v for v in p.pop("_price_candidates") if v > 0]
+    if candidates:
+        p["price_raw"] = min(candidates)
 
     # Breadcrumbs
     p["breadcrumbs"] = _extract_breadcrumbs(soup)
@@ -191,22 +197,18 @@ def _apply_dom(soup: BeautifulSoup, page_url: str, p: dict) -> None:
             break
     _set_if_empty(p, "description_nl", desc_html or desc_text)
 
-    # Price: collect all candidate values, exclude old-price wrappers, take the minimum
-    price_candidates: list[float] = []
+    # Price: collect all candidates, excluding explicit old-price wrappers
     seen_price_els: set[int] = set()
     for sel in SELECTORS["price"]:
         for el in soup.select(sel):
             if id(el) in seen_price_els:
                 continue
             seen_price_els.add(id(el))
-            # Skip if inside an .old-price or [data-price-type=oldPrice] wrapper
             if el.find_parent(class_="old-price") or el.find_parent(attrs={"data-price-type": "oldPrice"}):
                 continue
             val = _parse_price(el.get_text(strip=True))
             if val > 0:
-                price_candidates.append(val)
-    if price_candidates:
-        _set_price_if_empty(p, min(price_candidates))
+                p["_price_candidates"].append(val)
 
     # Images from DOM
     for sel in SELECTORS["images"]:
@@ -253,14 +255,13 @@ def _set_if_empty(p: dict, key: str, value: str) -> None:
 
 
 def _set_price_if_empty(p: dict, raw: object) -> None:
-    if p["price_raw"]:
-        return
+    """Collect price candidate; final min() taken in parse_product."""
     if isinstance(raw, float) and raw > 0:
-        p["price_raw"] = raw
+        p["_price_candidates"].append(raw)
         return
     price = _parse_price(str(raw) if raw else "")
     if price:
-        p["price_raw"] = price
+        p["_price_candidates"].append(price)
 
 
 def _parse_price(raw: str) -> float:
