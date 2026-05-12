@@ -93,6 +93,12 @@ def step_discover(url: str) -> None:
     if soup is None:
         log.error("Failed to fetch %s", url)
         sys.exit(1)
+
+    # Debug: show page title and first 500 chars so we can verify we got the right page
+    title_tag = soup.find("title")
+    print(f"\n[DEBUG] Page title: {title_tag.get_text(strip=True) if title_tag else '(none)'}")
+    print(f"[DEBUG] Page text preview:\n{soup.get_text(separator=' ', strip=True)[:500]}\n")
+
     discover_selectors(soup)
     sys.exit(0)
 
