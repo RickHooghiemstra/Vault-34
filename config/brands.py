@@ -6,7 +6,9 @@ BRAND_NORM  — normalises variant spellings to a canonical display name.
 """
 
 # Ordered by priority — scrape these first, in order
+# Slugs must match uitlaatstore.nl/alle-merken/{slug} exactly
 TOP_BRANDS: list[str] = [
+    # Tier 1 — premium / high-volume
     "akrapovic",
     "arrow",
     "sc-project",
@@ -17,12 +19,32 @@ TOP_BRANDS: list[str] = [
     "gpr",
     "termignoni",
     "ixil",
-    "spark",
-    "zard",
     "scorpion",
+    "zard",
     "laser",
-    "racefit",
-    "austin-racing",
+    "two-brothers",
+    "vance-hines",
+    "cobra",
+    # Tier 2 — mid-range / specialist
+    "hp-corse",
+    "qd",
+    "bodis",
+    "bos",
+    "hurric",
+    "giannelli",
+    "marving",
+    "motad",
+    "exan",
+    "delkevic",
+    "tecnigas",
+    "sito",
+    "storm",
+    "supertrapp",
+    "silvertail",
+    "predator",
+    "mac",
+    "ix-race",
+    "fmf",
 ]
 
 # Canonical display names for tag generation and Shopify Vendor field
@@ -59,6 +81,30 @@ BRAND_NORM: dict[str, str] = {
     "takkoni":         "Takkoni",
     "brocks":          "Brocks",
     "rizoma":          "Rizoma",
+    "two-brothers":    "Two Brothers",
+    "two brothers":    "Two Brothers",
+    "vance-hines":     "Vance & Hines",
+    "cobra":           "Cobra",
+    "hp-corse":        "HP Corse",
+    "qd":              "QD Exhaust",
+    "bodis":           "Bodis",
+    "bos":             "Bos",
+    "hurric":          "Hurric",
+    "giannelli":       "Giannelli",
+    "marving":         "Marving",
+    "motad":           "Motad",
+    "exan":            "Exan",
+    "delkevic":        "Delkevic",
+    "tecnigas":        "Tecnigas",
+    "sito":            "Sito",
+    "storm":           "Storm",
+    "supertrapp":      "Supertrapp",
+    "silvertail":      "Silvertail",
+    "predator":        "Predator",
+    "mac":             "MAC",
+    "ix-race":         "IX-Race",
+    "fmf":             "FMF",
+    "laser":           "Laser",
 }
 
 
