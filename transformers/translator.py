@@ -130,22 +130,37 @@ def _cache_key(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 _SYSTEM_PROMPT = (
-    "You are a professional technical translator specialising in motorcycle exhaust systems. "
-    "Translate Dutch product descriptions to English. Rules:\n"
-    "- Preserve all HTML tags exactly (do not add or remove any)\n"
-    "- Keep brand names, model numbers, SKUs, and technical specs verbatim (e.g. 'CB650R', '60.5mm', 'E5')\n"
-    "- Keep measurements and units as-is\n"
+    "You are an expert SEO content writer and technical translator for motorcycle exhaust systems.\n"
+    "Translate Dutch product descriptions to English and structure them for SEO. Rules:\n\n"
+    "HTML STRUCTURE:\n"
+    "- Use <p> for paragraphs — never bare line breaks or <br> as paragraph separators\n"
+    "- Use <ul><li>…</li></ul> for feature/spec lists\n"
+    "- Use <strong> for product name, brand, key specs, and fitment\n\n"
+    "FIRST PARAGRAPH (critical for SEO):\n"
+    "- Must open with: brand name + exhaust type + make/model/year (from the Product context line)\n"
+    "- Example: <p><strong>Akrapovic Slip-On Exhaust</strong> for the <strong>Honda CB650R (2019–2023)</strong>. [key benefit sentence].</p>\n\n"
+    "CONTENT:\n"
     "- Translate naturally for an international English-speaking audience\n"
-    "- Return ONLY the translated text, no explanation or commentary\n"
-    "- If the input is already in English, return it unchanged"
+    "- Keep brand names, model codes, SKUs, measurements verbatim (e.g. 'CB650R', '60.5mm', 'Euro 5')\n"
+    "- Restructure inline spec lists into <ul><li> format\n"
+    "- If fitment info present, close with: <p><strong>Fitment:</strong> [make model year].</p>\n"
+    "- Do NOT add marketing claims, shipping promises, or store references not in the original\n"
+    "- Return ONLY the HTML — no commentary, no markdown, no code fences\n"
+    "- If already well-structured English, return with only minor HTML improvements\n"
+    "- The Product context line is a hint only — do NOT output it"
 )
 
 
-def translate_batch(texts: list[str]) -> list[str]:
+def translate_batch(texts: list[str], contexts: list[str] | None = None) -> list[str]:
     """
     Translate a batch of Dutch HTML description strings to English.
     Returns translated strings in the same order.
     Falls back to original on error.
+
+    contexts: optional list of product context hints (same length as texts),
+    e.g. "Akrapovic | Slip-On Exhaust | Honda | CB650R | 2019-2023".
+    Included in the prompt to guide SEO-structured first paragraph.
+    Cache key is still MD5(description_nl) — context hints don't affect caching.
     """
     if not ANTHROPIC_API_KEY:
         log.warning("ANTHROPIC_API_KEY not set — descriptions will remain in Dutch")
@@ -168,10 +183,16 @@ def translate_batch(texts: list[str]) -> list[str]:
     if not to_translate:
         return results
 
-    # Build numbered prompt
-    numbered = "\n\n".join(
-        f"[{j+1}]\n{text}" for j, (_, text) in enumerate(to_translate)
-    )
+    # Build numbered prompt — include optional context hint per item
+    parts: list[str] = []
+    for j, (i, text) in enumerate(to_translate):
+        ctx = contexts[i] if contexts and i < len(contexts) else ""
+        if ctx:
+            parts.append(f"[{j+1}]\nProduct context: {ctx}\nDescription:\n{text}")
+        else:
+            parts.append(f"[{j+1}]\n{text}")
+    numbered = "\n\n".join(parts)
+
     user_prompt = (
         f"Translate the following {len(to_translate)} Dutch product description(s) to English. "
         f"Return each translation preceded by its number in square brackets, e.g. [1].\n\n"
@@ -218,15 +239,28 @@ def translate_all(products: list[dict]) -> list[dict]:
     _load_cache()
     texts = [p.get("description_nl", "") for p in products]
 
+    # Build SEO context hints — used by translate_batch to write keyword-rich first paragraphs
+    contexts = [
+        " | ".join(filter(None, [
+            p.get("brand", ""),
+            translate_title(p.get("title", "")),
+            p.get("fitment", {}).get("make", ""),
+            p.get("fitment", {}).get("model", ""),
+            p.get("fitment", {}).get("year", ""),
+        ]))
+        for p in products
+    ]
+
     # Process in batches
     all_translated: list[str] = []
     for start in range(0, len(texts), TRANSLATION_BATCH):
-        batch = texts[start : start + TRANSLATION_BATCH]
+        batch   = texts[start : start + TRANSLATION_BATCH]
+        ctx_batch = contexts[start : start + TRANSLATION_BATCH]
         log.info(
             "Translating batch %d-%d of %d",
             start + 1, min(start + TRANSLATION_BATCH, len(texts)), len(texts),
         )
-        all_translated.extend(translate_batch(batch))
+        all_translated.extend(translate_batch(batch, contexts=ctx_batch))
 
     for product, translated in zip(products, all_translated):
         product["description_en"] = translated

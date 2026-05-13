@@ -98,7 +98,7 @@ SELECTORS = {
 # ---------------------------------------------------------------------------
 
 VARIANT_GRAMS      = 5000
-VARIANT_TAXABLE    = "FALSE"    # non-EU export — no VAT charged at checkout
+VARIANT_TAXABLE    = "TRUE"     # Shopify applies VAT by customer location (configure tax regions in Shopify Admin → Taxes & duties)
 PRODUCT_PUBLISHED  = "TRUE"
 INVENTORY_TRACKER  = "shopify"
 INVENTORY_QTY      = 1
