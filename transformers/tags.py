@@ -154,6 +154,8 @@ def build_tags(product: dict) -> list[str]:
     if product_type and product_type.lower() not in _CAT_DENYLIST:
         tags.append(f"CAT_{_slug(product_type)}")
 
+    tags.append("source:uitlaatstore.nl")
+
     return tags
 
 

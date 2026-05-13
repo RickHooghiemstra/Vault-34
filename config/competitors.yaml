@@ -1,0 +1,42 @@
+# Competitor Shopify stores for price intelligence.
+#
+# Fields:
+#   domain       – Shopify store domain (no https://)
+#   name         – Human-readable label used in reports
+#   market       – Market/region code (EU, GB, US, …)
+#   currency     – ISO 4217 currency code for prices listed on the site
+#   includes_vat – true if displayed prices include VAT/sales-tax
+#
+# Scraped via GET https://{domain}/products.json?limit=250&page=N
+# The scraper skips a store if it returns 403 / 429 / 451.
+
+competitors:
+  - domain: www.motea.com
+    name: Motea EU
+    market: EU
+    currency: EUR
+    includes_vat: true
+
+  - domain: www.fc-moto.de
+    name: FC-Moto DE
+    market: EU
+    currency: EUR
+    includes_vat: true
+
+  - domain: www.louis.de
+    name: Louis DE
+    market: EU
+    currency: EUR
+    includes_vat: true
+
+  - domain: www.polo-motorrad.de
+    name: Polo Motorrad DE
+    market: EU
+    currency: EUR
+    includes_vat: true
+
+  - domain: www.holeshot.co.uk
+    name: Holeshot UK
+    market: GB
+    currency: GBP
+    includes_vat: true
