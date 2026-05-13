@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Environment
+.env
+
+# Generated outputs (gitignored — run the scraper to regenerate)
+shopify_exports/*.csv
+shopify_exports/image_manifest.json
+images/
+logs/
+# Stray CSV files dropped in root by older runs
+*.csv
+# Nested accidental clone
+vault-34/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
