@@ -203,8 +203,8 @@ _NON_PRODUCT_PATTERNS = re.compile(
     r"|cart|checkout|account|login|register|search|categorie|category|tag|page|filter"
     # info / legal / editorial pages that appear in brand link lists
     r"|verzending|vacatures|garantie-retouren|onderhoud-motorfiets|tax-free-shopping"
-    r"|privacyverklaring|sponsoring|producten|algemene-voorwaarden|olie-kiezen"
-    r"|oliekeuzehulp|outlet-aanbiedingen|nieuws|blog|sitemap|service|veelgestelde"
+    r"|privacyverklaring|sponsoring|producten|algemene-voorwaarden"
+    r"|olie-kiezen(?:-oliekeuzehulp)?|outlet-aanbiedingen|nieuws|blog|sitemap|service|veelgestelde"
     r")(/|$)",
     re.I,
 )
