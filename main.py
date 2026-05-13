@@ -205,6 +205,12 @@ def step_deduplicate(products: list[dict]) -> list[dict]:
     return unique
 
 
+def step_clean(products: list[dict]) -> list[dict]:
+    """Strip competitor branding and UI artefacts from descriptions."""
+    from transformers.cleaner import clean_all
+    return clean_all(products)
+
+
 def step_translate(products: list[dict]) -> list[dict]:
     """Translate description_nl → description_en via Claude Haiku."""
     from transformers.translator import translate_all
@@ -297,6 +303,7 @@ def main() -> None:
 
     # Pipeline
     products = step_deduplicate(products)
+    products = step_clean(products)
 
     if not args.skip_translate:
         products = step_translate(products)

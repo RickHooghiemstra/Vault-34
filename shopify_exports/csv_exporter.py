@@ -28,6 +28,29 @@ OUTPUT_CSV      = EXPORTS_DIR / "shopify_import.csv"
 IMAGE_MANIFEST  = EXPORTS_DIR / "image_manifest.json"
 
 # ---------------------------------------------------------------------------
+# Product type resolver — derives a clean English product type from TYPE_ tags
+# ---------------------------------------------------------------------------
+
+_TYPE_TAG_TO_PRODUCT_TYPE: dict[str, str] = {
+    "TYPE_SlipOn":      "Slip-On Exhaust",
+    "TYPE_FullSystem":  "Full System Exhaust",
+    "TYPE_Decat":       "Decat Pipe",
+    "TYPE_LinkPipe":    "Link Pipe",
+    "TYPE_HeaderSet":   "Header Set",
+    "TYPE_DbKiller":    "Db Killer",
+    "TYPE_HeatShield":  "Heat Shield",
+    "TYPE_CatReplacer": "Cat Replacer",
+}
+
+
+def _resolve_product_type(tags: list[str]) -> str:
+    """Return a clean English product type based on TYPE_ tags, or a sensible fallback."""
+    for tag in tags:
+        if tag in _TYPE_TAG_TO_PRODUCT_TYPE:
+            return _TYPE_TAG_TO_PRODUCT_TYPE[tag]
+    return "Motorcycle Exhaust"
+
+# ---------------------------------------------------------------------------
 # Shopify CSV column order
 # ---------------------------------------------------------------------------
 
@@ -121,7 +144,8 @@ def _product_to_rows(product: dict, used_handles: set[str]) -> tuple[list[dict],
     net         = format_price(net_price(product.get("price_raw", 0.0)))
     orig        = format_price(product.get("price_raw", 0.0))
 
-    product_type = product.get("product_type", "Uitlaatdempers")
+    # Derive English product type from TYPE_ tags (never exposes raw Dutch breadcrumbs)
+    product_type = _resolve_product_type(tags_list)
     description  = product.get("description_en") or product.get("description_nl", "")
 
     seo_t   = seo_title(brand, product_type, make, model, year)

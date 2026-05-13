@@ -30,16 +30,22 @@ _TYPE_MAP: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\bracing\s*line\b",                  re.I), "FullSystem"),
     (re.compile(r"\bevolution\s*line\b",               re.I), "FullSystem"),
     (re.compile(r"\buitlaatsysteem\b",                 re.I), "FullSystem"),
+    (re.compile(r"\bvolledig\s*systeem\b",             re.I), "FullSystem"),   # Dutch
+    (re.compile(r"\bvolledige\s*uitlaat\b",            re.I), "FullSystem"),   # Dutch
     (re.compile(r"\bdecat\b",                          re.I), "Decat"),
+    (re.compile(r"\bde[-\s]?cat\b",                    re.I), "Decat"),
     (re.compile(r"\blink\s*pipe\b",                    re.I), "LinkPipe"),
     (re.compile(r"\blinkpipe\b",                       re.I), "LinkPipe"),
+    (re.compile(r"\blinkpijp\b",                       re.I), "LinkPipe"),     # Dutch
     (re.compile(r"\bcollector\b",                      re.I), "LinkPipe"),
     (re.compile(r"\buitlaatbochtenset\b",              re.I), "HeaderSet"),
+    (re.compile(r"\bbochtenset\b",                     re.I), "HeaderSet"),    # Dutch
+    (re.compile(r"\bheader\s*set\b",                   re.I), "HeaderSet"),
     (re.compile(r"\bdb[-\s]?killer\b",                 re.I), "DbKiller"),
     (re.compile(r"\bhitteschild\b",                    re.I), "HeatShield"),
+    (re.compile(r"\bheat\s*shield\b",                  re.I), "HeatShield"),
     (re.compile(r"\bkat(?:vervanger)?\b",              re.I), "CatReplacer"),
-    (re.compile(r"\boutlet\b",                         re.I), "SlipOn"),
-    (re.compile(r"\bdemper\b",                         re.I), "SlipOn"),
+    (re.compile(r"\bdempers?\b",                       re.I), "SlipOn"),       # Dutch (singular + plural)
 ]
 
 # ---------------------------------------------------------------------------
@@ -60,6 +66,20 @@ _MAT_MAP: list[tuple[re.Pattern, str]] = [
 # ---------------------------------------------------------------------------
 
 _EURO_RE = re.compile(r"\beuro\s*([3-5])\b", re.I)
+
+# ---------------------------------------------------------------------------
+# CAT_ tag denylist — breadcrumb values that are NOT product categories
+# (navigation pages, static pages, store sections, etc.)
+# ---------------------------------------------------------------------------
+
+_CAT_DENYLIST: frozenset[str] = frozenset({
+    "home", "winkel", "shop", "contact", "verzending", "retour",
+    "garantie", "over ons", "faq", "vacatures", "sponsoring",
+    "privacy", "algemene voorwaarden", "tax free", "outlet",
+    "alle merken", "alle producten", "producten", "merken",
+    "onderhoud", "olie", "blog", "nieuws", "service", "sitemap",
+    "veelgestelde vragen", "tax free shopping", "outlet aanbiedingen",
+})
 
 # ---------------------------------------------------------------------------
 # Homologation keywords
@@ -129,13 +149,10 @@ def build_tags(product: dict) -> list[str]:
     elif _RACE_ONLY_RE.search(text):
         tags.append("RACE_ONLY")
 
-    # Category from breadcrumbs
+    # Category from breadcrumbs — only for exhaust-relevant values
     product_type = product.get("product_type", "")
-    if product_type:
+    if product_type and product_type.lower() not in _CAT_DENYLIST:
         tags.append(f"CAT_{_slug(product_type)}")
-
-    # Source tracking
-    tags.append("source:uitlaatstore.nl")
 
     return tags
 
