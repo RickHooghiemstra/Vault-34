@@ -20,6 +20,7 @@ from config.settings import (
 from transformers.price import export_price, net_price, format_price
 from transformers.tags import build_tags
 from transformers.seo import generate_handle, seo_title, meta_description, alt_text
+from transformers.translator import translate_title
 
 log = logging.getLogger(__name__)
 
@@ -107,7 +108,8 @@ def _product_to_rows(product: dict, used_handles: set[str]) -> tuple[list[dict],
     model   = fitment.get("model", "")
     year    = fitment.get("year", "")
     brand   = product.get("brand", "")
-    title   = product.get("title", "")
+    # Use pre-translated title if available; otherwise apply term-map on the fly
+    title   = product.get("title_en") or translate_title(product.get("title", ""))
 
     handle      = generate_handle(title, product.get("sku", ""), used_handles)
     used_handles.add(handle)

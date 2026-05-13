@@ -15,6 +15,76 @@ import re
 from pathlib import Path
 from typing import Optional
 
+# ---------------------------------------------------------------------------
+# Title translation — Dutch → English term map
+# (applied before Claude API; no API cost)
+# ---------------------------------------------------------------------------
+
+# Order matters: longer / multi-word phrases must come before their components
+_TITLE_TERMS: list[tuple[re.Pattern, str]] = [
+    # Multi-word phrases
+    (re.compile(r"\bVolledig\s+systeem\b",       re.I), "Full System"),
+    (re.compile(r"\bOptionele\s+bochtenset\b",   re.I), "Optional Header Set"),
+    (re.compile(r"\bOptionele\s+collector\b",    re.I), "Optional Collector"),
+    (re.compile(r"\bOptionele\s+linkpijp\b",     re.I), "Optional Link Pipe"),
+    (re.compile(r"\bOptionele\s+eindkap\b",      re.I), "Optional End Cap"),
+    (re.compile(r"\bOptionele\s+demper\b",       re.I), "Optional Silencer"),
+    (re.compile(r"\bHitte[\s\-]?schild\b",       re.I), "Heat Shield"),
+    (re.compile(r"\bKatalysator\s*converter\b",  re.I), "Catalytic Converter"),
+    (re.compile(r"\bKatalysator\b",              re.I), "Cat"),
+    (re.compile(r"\bUitlaatbochten\b",           re.I), "Exhaust Headers"),
+    (re.compile(r"\bUitlaatpijpen?\b",           re.I), "Exhaust Pipe"),
+    (re.compile(r"\bGeluidsdemper\b",            re.I), "Silencer"),
+    (re.compile(r"\bGeluiddemper\b",             re.I), "Silencer"),
+    # Single component words
+    (re.compile(r"\bLinkpijp\b",                 re.I), "Link Pipe"),
+    (re.compile(r"\bBochtenset\b",               re.I), "Header Set"),
+    (re.compile(r"\bDemper\b",                   re.I), "Silencer"),
+    (re.compile(r"\bEindkap\b",                  re.I), "End Cap"),
+    (re.compile(r"\bUitlaat\b",                  re.I), "Exhaust"),
+    (re.compile(r"\bSysteme?\b",                 re.I), "System"),
+    (re.compile(r"\bPijp\b",                     re.I), "Pipe"),
+    (re.compile(r"\bBrug\b",                     re.I), "Bridge"),
+    # Materials & finishes
+    (re.compile(r"\bRVS\b"),                           "Stainless Steel"),
+    (re.compile(r"\bZwart\b",                    re.I), "Black"),
+    (re.compile(r"\bZilver\b",                   re.I), "Silver"),
+    (re.compile(r"\bGoud\s*verguld\b",           re.I), "Gold-Plated"),
+    (re.compile(r"\bVerguld\b",                  re.I), "Gold-Plated"),
+    (re.compile(r"\bGoud\b",                     re.I), "Gold"),
+    (re.compile(r"\bChroom\b",                   re.I), "Chrome"),
+    (re.compile(r"\bMat\s+(?=black|zwart|wit|silver)", re.I), "Matte "),
+    (re.compile(r"\bMat\b",                      re.I), "Matte"),
+    (re.compile(r"\bGepolijst\b",                re.I), "Polished"),
+    (re.compile(r"\bGeborsteld\b",               re.I), "Brushed"),
+    # Descriptors
+    (re.compile(r"\bOptionele?\b",               re.I), "Optional"),
+    (re.compile(r"\bVolledig\b",                 re.I), "Full"),
+    (re.compile(r"\bVerkort\b",                  re.I), "Short"),
+    (re.compile(r"\bHoog\b",                     re.I), "High"),
+    (re.compile(r"\bLaag\b",                     re.I), "Low"),
+    (re.compile(r"\bOnderdeel\b",                re.I), "Part"),
+    (re.compile(r"\bAccessoire\b",               re.I), "Accessory"),
+    # Prepositions / grammar
+    (re.compile(r"\bvoor\b",                     re.I), "for"),
+    (re.compile(r"\bmet\b",                      re.I), "with"),
+    (re.compile(r"\bzonder\b",                   re.I), "without"),
+    (re.compile(r"\ben\b",                       re.I), "and"),
+    (re.compile(r"\bof\b",                       re.I), "or"),
+    (re.compile(r"\bvan\b",                      re.I), ""),   # usually redundant in EN
+    (re.compile(r"\bop\b",                       re.I), ""),
+    # Collapse double spaces left by removed words
+    (re.compile(r"\s{2,}"),                            " "),
+]
+
+
+def translate_title(dutch: str) -> str:
+    """Apply Dutch → English term-map substitutions to a product title."""
+    title = dutch
+    for pattern, replacement in _TITLE_TERMS:
+        title = pattern.sub(replacement, title)
+    return title.strip()
+
 from config.settings import (
     ANTHROPIC_API_KEY,
     TRANSLATION_MODEL,
@@ -155,6 +225,8 @@ def translate_all(products: list[dict]) -> list[dict]:
     for product, translated in zip(products, all_translated):
         product["description_en"] = translated
         product["translation_failed"] = (translated == product.get("description_nl", ""))
+        # Translate title via term map (no API cost)
+        product["title_en"] = translate_title(product.get("title", ""))
 
     return products
 
