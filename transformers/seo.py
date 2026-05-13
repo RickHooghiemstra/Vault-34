@@ -42,15 +42,17 @@ def seo_title(brand: str, product_type: str, make: str, model: str, year: str) -
     return full[:70] if len(full) > 70 else full
 
 
-def meta_description(title: str, brand: str, make: str, model: str) -> str:
-    """150-char meta description."""
-    bike = f"{make} {model}".strip() or "your motorcycle"
-    desc = f"Buy the {title} at Vault-34. Free international shipping. Premium {brand} exhaust for {bike}."
+def meta_description(title: str, brand: str, make: str, model: str,
+                     year: str = "", product_type: str = "") -> str:
+    """150-char keyword-rich meta description."""
+    bike  = " ".join(filter(None, [make, model, year])).strip() or "your motorcycle"
+    ptype = product_type or "exhaust"
+    desc  = f"{brand} {ptype} for the {bike}. Upgrade your exhaust at Vault-34 — worldwide shipping."
     return desc[:150]
 
 
-def alt_text(brand: str, product_type: str, make: str, model: str) -> str:
-    """ALT text format: '{Brand} {ProductType} for {Make} {Model}'."""
+def alt_text(brand: str, product_type: str, make: str, model: str, year: str = "") -> str:
+    """ALT text format: '{Brand} {ProductType} for {Make} {Model} {Year}'."""
     parts = [brand, product_type]
     if make or model:
         parts.append("for")
@@ -58,6 +60,8 @@ def alt_text(brand: str, product_type: str, make: str, model: str) -> str:
             parts.append(make)
         if model:
             parts.append(model)
+        if year:
+            parts.append(year)
     return " ".join(p for p in parts if p)
 
 

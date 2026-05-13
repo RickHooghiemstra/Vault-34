@@ -16,7 +16,7 @@ Vault-34 is a fully automated pipeline that:
 5. **Validates** all product image URLs (resolution, accessibility, no placeholders) and **downloads** every image locally
 6. **Exports** a production-ready Shopify CSV with structured fitment tags, SEO metadata, competitor pricing columns, and multi-image support
 
-The output is a clean, scalable, SEO-friendly motorcycle exhaust catalog ready for a non-EU export Shopify store.
+The output is a clean, scalable, SEO-friendly motorcycle exhaust catalog ready for a Shopify store serving EU and international customers.
 
 ---
 
@@ -329,10 +329,12 @@ Descriptions are translated Dutch → English using **Claude Haiku** (`claude-ha
 - **Prompt caching:** system prompt cached (reduces cost ~90% on repeated runs)
 - **Result cache:** `logs/translation_cache.json` keyed by MD5 — no re-translation on re-runs
 - **Fallback:** Dutch original kept on API error (flagged in QA report)
-- **HTML preservation:** tags, model numbers, specs kept verbatim
+- **SEO structure:** descriptions are structured for search engines — the first `<p>` always opens with brand + exhaust type + make/model/year, spec lists are converted to `<ul><li>`, paragraphs use `<p>` instead of `<br>`
 - **Titles:** always translated via built-in Dutch → English term map (no API cost)
 
 Set `ANTHROPIC_API_KEY` in `.env`. Skip translation with `--skip-translate`.
+
+> **Re-translate with improved structure:** delete `logs/translation_cache.json` and re-run without `--skip-translate` to force all descriptions through the SEO-structured prompt.
 
 ---
 
@@ -364,6 +366,14 @@ Skip validation with `--skip-validate` (images are still downloaded from the unv
 4. Open **Shopify Admin → Products → Import**
 5. Upload `shopify_exports/shopify_import.csv`
 6. Smart collections auto-populate from tags
+
+### VAT / Tax setup
+
+The CSV sets `Variant Taxable = TRUE` so Shopify's tax engine applies the correct VAT automatically based on customer location. Before going live:
+
+- Go to **Shopify Admin → Settings → Taxes and duties**
+- Enable the EU tax regions relevant to your customer base (Netherlands, Germany, etc.)
+- Shopify will then charge the correct local VAT rate at checkout per country
 
 ### Output files
 

@@ -159,8 +159,8 @@ def _product_to_rows(product: dict, used_handles: set[str]) -> tuple[list[dict],
     description  = product.get("description_en") or product.get("description_nl", "")
 
     seo_t   = seo_title(brand, product_type, make, model, year)
-    meta_d  = meta_description(title, brand, make, model)
-    alt     = alt_text(brand, product_type, make, model)
+    meta_d  = meta_description(title, brand, make, model, year=year, product_type=product_type)
+    alt     = alt_text(brand, product_type, make, model, year=year)
 
     images = product.get("validated_images") or product.get("images", [])
 
