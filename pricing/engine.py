@@ -15,6 +15,7 @@ For each product:
   Round to nearest €0.95 (e.g. 99.95, 149.95).
 """
 
+import csv
 import json
 import logging
 import math
@@ -35,6 +36,26 @@ _HARD_FLOOR_MULT = 1.20   # absolute floor: net × 1.20
 _P60             = 0.60   # percentile target
 
 PRICING_REPORT_FILE = LOGS_DIR / "pricing_report.json"
+AUDIT_CSV_FILE      = LOGS_DIR / "competitor_audit.csv"
+
+_AUDIT_COLUMNS = [
+    "SKU",
+    "Title",
+    "URL",
+    "Net Cost (EUR)",
+    "Old Price (EUR)",
+    "New Price (EUR)",
+    "Margin %",
+    "Pricing Method",
+    "P60 Price (EUR)",
+    "Min Clamp (EUR)",
+    "Max Clamp (EUR)",
+    "Competitor Name",
+    "Competitor Domain",
+    "Competitor Matched Title",
+    "Competitor Price (EUR)",
+    "Match Confidence",
+]
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -105,12 +126,16 @@ def compute_price(
         })
 
     # ── Determine price ──────────────────────────────────────────────────────
+    min_clamp = round(net_cost * _MIN_MARGIN_MULT, 2)
+    max_clamp = round(net_cost * _MAX_MARGIN_MULT, 2)
+
     if len(competitor_prices) >= 2:
-        target  = _percentile(competitor_prices, _P60)
-        clamped = max(net_cost * _MIN_MARGIN_MULT, min(net_cost * _MAX_MARGIN_MULT, target))
+        p60     = _percentile(competitor_prices, _P60)
+        clamped = max(net_cost * _MIN_MARGIN_MULT, min(net_cost * _MAX_MARGIN_MULT, p60))
         raw_price = max(hard_floor, clamped)
         method  = "competitor"
     else:
+        p60       = None
         raw_price = max(hard_floor, net_cost * _DEFAULT_MARKUP)
         method    = "default"
         if not competitor_prices:
@@ -137,9 +162,58 @@ def compute_price(
         "new_price":         final_price,
         "margin_pct":        round(margin_pct, 1),
         "method":            method,
+        "p60":               round(p60, 2) if p60 is not None else None,
+        "min_clamp":         min_clamp,
+        "max_clamp":         max_clamp,
         "competitor_prices": [round(p, 2) for p in competitor_prices],
         "competitor_meta":   competitor_meta,
     }
+
+
+# ── Audit CSV ────────────────────────────────────────────────────────────────
+
+def _write_audit_csv(report: list[dict]) -> None:
+    """
+    Write logs/competitor_audit.csv — one row per product-competitor match.
+    Products with no matches get a single row with empty competitor columns.
+    """
+    try:
+        with AUDIT_CSV_FILE.open("w", newline="", encoding="utf-8") as fh:
+            writer = csv.DictWriter(fh, fieldnames=_AUDIT_COLUMNS, extrasaction="ignore")
+            writer.writeheader()
+
+            for entry in report:
+                base = {
+                    "SKU":              entry.get("sku", ""),
+                    "Title":            entry.get("title", ""),
+                    "URL":              entry.get("url", ""),
+                    "Net Cost (EUR)":   entry.get("net_cost", ""),
+                    "Old Price (EUR)":  entry.get("old_price", ""),
+                    "New Price (EUR)":  entry.get("new_price", ""),
+                    "Margin %":         entry.get("margin_pct", ""),
+                    "Pricing Method":   entry.get("method", ""),
+                    "P60 Price (EUR)":  entry.get("p60", "") if entry.get("p60") is not None else "",
+                    "Min Clamp (EUR)":  entry.get("min_clamp", ""),
+                    "Max Clamp (EUR)":  entry.get("max_clamp", ""),
+                }
+
+                metas = entry.get("competitor_meta", [])
+                if metas:
+                    for meta in metas:
+                        writer.writerow({
+                            **base,
+                            "Competitor Name":         meta.get("name", ""),
+                            "Competitor Domain":        meta.get("domain", ""),
+                            "Competitor Matched Title": meta.get("title", ""),
+                            "Competitor Price (EUR)":   meta.get("price_eur", ""),
+                            "Match Confidence":         meta.get("confidence", ""),
+                        })
+                else:
+                    writer.writerow(base)
+
+        log.info("Competitor audit CSV → %s", AUDIT_CSV_FILE)
+    except OSError as exc:
+        log.warning("Could not write competitor audit CSV: %s", exc)
 
 
 # ── Batch entry point ────────────────────────────────────────────────────────
@@ -168,7 +242,7 @@ def apply_pricing(
             **meta,
         })
 
-    # Persist report
+    # Persist JSON report + audit CSV
     try:
         PRICING_REPORT_FILE.write_text(
             json.dumps(report, indent=2, ensure_ascii=False),
@@ -177,6 +251,8 @@ def apply_pricing(
         log.info("Pricing report → %s", PRICING_REPORT_FILE)
     except OSError as exc:
         log.warning("Could not write pricing report: %s", exc)
+
+    _write_audit_csv(report)
 
     competitor_count = sum(1 for r in report if r["method"] == "competitor")
     default_count    = len(report) - competitor_count

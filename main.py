@@ -311,10 +311,13 @@ def main() -> None:
             log.error("Cached products file is empty.")
             sys.exit(1)
         products = step_pricing(products)
+        step_download_images(products)
         output = step_export(products)
         print(f"\n{'='*60}")
         print(f"  Pricing-only run complete! {len(products)} products → {output}")
-        print(f"  Pricing report: logs/pricing_report.json")
+        print(f"  Pricing report:   logs/pricing_report.json")
+        print(f"  Competitor audit: logs/competitor_audit.csv")
+        print(f"  Images:           images/")
         print(f"{'='*60}\n")
         return
 
@@ -357,6 +360,8 @@ def main() -> None:
     if not args.skip_validate:
         products = step_validate_images(products)
 
+    step_download_images(products)
+
     if not args.skip_pricing:
         products = step_pricing(products)
     else:
@@ -367,10 +372,12 @@ def main() -> None:
 
     print(f"\n{'='*60}")
     print(f"  Done! {len(products)} products → {output}")
-    print(f"  QA report:      logs/qa_report.json")
-    print(f"  Image manifest: shopify_exports/image_manifest.json")
+    print(f"  QA report:        logs/qa_report.json")
+    print(f"  Image manifest:   shopify_exports/image_manifest.json")
+    print(f"  Images:           images/")
     if not args.skip_pricing:
-        print(f"  Pricing report: logs/pricing_report.json")
+        print(f"  Pricing report:   logs/pricing_report.json")
+        print(f"  Competitor audit: logs/competitor_audit.csv")
     print(f"  Next step: Shopify Admin → Products → Import → {output.name}")
     print(f"{'='*60}\n")
 
