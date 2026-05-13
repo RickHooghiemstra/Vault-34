@@ -197,10 +197,15 @@ def _extract_product_urls(soup: BeautifulSoup) -> list[str]:
     return list(urls)
 
 
-# Patterns that identify listing/category pages — exclude these from product URLs
+# Patterns that identify listing/category/info pages — exclude from product URLs
 _NON_PRODUCT_PATTERNS = re.compile(
     r"/(alle-merken|alle-producten|motormerk|uitlaten-tuning|faq|over-ons|contact"
-    r"|cart|checkout|account|login|register|search|categorie|category|tag|page|filter)(/|$)",
+    r"|cart|checkout|account|login|register|search|categorie|category|tag|page|filter"
+    # info / legal / editorial pages that appear in brand link lists
+    r"|verzending|vacatures|garantie-retouren|onderhoud-motorfiets|tax-free-shopping"
+    r"|privacyverklaring|sponsoring|producten|algemene-voorwaarden|olie-kiezen"
+    r"|oliekeuzehulp|outlet-aanbiedingen|nieuws|blog|sitemap|service|veelgestelde"
+    r")(/|$)",
     re.I,
 )
 

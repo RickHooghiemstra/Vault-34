@@ -21,6 +21,15 @@ import sys
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
+# UTF-8 output — prevents UnicodeEncodeError on Windows cp1252 consoles
+# ---------------------------------------------------------------------------
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+# ---------------------------------------------------------------------------
 # Logging setup
 # ---------------------------------------------------------------------------
 
