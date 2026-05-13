@@ -12,6 +12,8 @@ Usage examples:
   python main.py --discover --url https://www.uitlaatstore.nl/some-product-slug
   python main.py --brands akrapovic --skip-translate   # keep Dutch descriptions
   python main.py --brands akrapovic --skip-validate    # skip image validation
+  python main.py --brands akrapovic --skip-pricing     # flat 50% markup
+  python main.py --pricing-only                        # re-price cached products only
 """
 
 import argparse
@@ -81,6 +83,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--skip-validate", action="store_true",
         help="Skip image URL validation (include all images as-is)",
+    )
+    parser.add_argument(
+        "--skip-pricing", action="store_true",
+        help="Skip competitor pricing; apply flat 50%% markup (existing behaviour)",
+    )
+    parser.add_argument(
+        "--pricing-only", action="store_true",
+        help="Skip uitlaatstore scraping; run pricing on cached logs/raw_products.json",
     )
     parser.add_argument(
         "--output", metavar="FILE", default="shopify_exports/shopify_import.csv",
@@ -224,6 +234,20 @@ def step_validate_images(products: list[dict]) -> list[dict]:
     return importable
 
 
+def step_pricing(products: list[dict]) -> list[dict]:
+    """Scrape competitors and apply competitor-aware pricing to all products."""
+    from competitor_intel.scrapers.shopify_json import scrape_all_competitors
+    from pricing.engine import apply_pricing
+
+    log.info("=== Competitor pricing ===")
+    competitor_data = scrape_all_competitors()
+    if not competitor_data:
+        log.info("No competitor data collected — all products will use default markup")
+
+    products, _report = apply_pricing(products, competitor_data)
+    return products
+
+
 def step_export(products: list[dict]) -> Path:
     """Write the Shopify CSV and image manifest."""
     from shopify_exports.csv_exporter import export
@@ -272,6 +296,28 @@ def main() -> None:
             sys.exit(1)
         step_discover(args.url)
 
+    # --pricing-only: skip uitlaatstore scraping; re-price from cache
+    if args.pricing_only:
+        raw_cache = Path("logs/raw_products.json")
+        if not raw_cache.exists():
+            print(
+                "--pricing-only requires logs/raw_products.json (run without this flag first)",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        log.info("--pricing-only: loading cached products from %s", raw_cache)
+        products = json.loads(raw_cache.read_text(encoding="utf-8"))
+        if not products:
+            log.error("Cached products file is empty.")
+            sys.exit(1)
+        products = step_pricing(products)
+        output = step_export(products)
+        print(f"\n{'='*60}")
+        print(f"  Pricing-only run complete! {len(products)} products → {output}")
+        print(f"  Pricing report: logs/pricing_report.json")
+        print(f"{'='*60}\n")
+        return
+
     # Determine brand list
     if args.all_brands:
         from config.brands import TOP_BRANDS
@@ -281,7 +327,7 @@ def main() -> None:
     elif args.from_cache:
         brands = []
     else:
-        print("Specify --brands, --all-brands, or --from-cache", file=sys.stderr)
+        print("Specify --brands, --all-brands, --from-cache, or --pricing-only", file=sys.stderr)
         sys.exit(1)
 
     # Load products
@@ -311,13 +357,20 @@ def main() -> None:
     if not args.skip_validate:
         products = step_validate_images(products)
 
+    if not args.skip_pricing:
+        products = step_pricing(products)
+    else:
+        log.info("--skip-pricing: using flat %.0f%% markup", 50)
+
     step_qa_report(products)
     output = step_export(products)
 
     print(f"\n{'='*60}")
     print(f"  Done! {len(products)} products → {output}")
-    print(f"  QA report:     logs/qa_report.json")
+    print(f"  QA report:      logs/qa_report.json")
     print(f"  Image manifest: shopify_exports/image_manifest.json")
+    if not args.skip_pricing:
+        print(f"  Pricing report: logs/pricing_report.json")
     print(f"  Next step: Shopify Admin → Products → Import → {output.name}")
     print(f"{'='*60}\n")
 

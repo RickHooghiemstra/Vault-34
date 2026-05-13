@@ -80,6 +80,8 @@ _COLUMNS = [
     "Source URL",
     "Original Price (incl. VAT)",
     "Net Price (excl. VAT)",
+    "Competitor Price (EUR)",
+    "Margin %",
     "Motorcycle Make",
     "Motorcycle Model",
     "Motorcycle Year",
@@ -140,9 +142,17 @@ def _product_to_rows(product: dict, used_handles: set[str]) -> tuple[list[dict],
     tags_list   = build_tags(product)
     tags_str    = ", ".join(tags_list)
 
-    price       = format_price(export_price(product.get("price_raw", 0.0)))
+    # Use competitor-aware price if the pricing engine ran; fall back to flat markup
+    computed    = product.get("export_price_computed")
+    price       = format_price(computed if computed is not None else export_price(product.get("price_raw", 0.0)))
     net         = format_price(net_price(product.get("price_raw", 0.0)))
     orig        = format_price(product.get("price_raw", 0.0))
+
+    # Visibility columns populated from pricing metadata (if available)
+    pricing_meta     = product.get("pricing_meta") or {}
+    competitor_prices = pricing_meta.get("competitor_prices", [])
+    comp_price_str   = format_price(sum(competitor_prices) / len(competitor_prices)) if competitor_prices else ""
+    margin_pct_str   = f"{pricing_meta['margin_pct']:.1f}" if "margin_pct" in pricing_meta else ""
 
     # Derive English product type from TYPE_ tags (never exposes raw Dutch breadcrumbs)
     product_type = _resolve_product_type(tags_list)
@@ -179,6 +189,8 @@ def _product_to_rows(product: dict, used_handles: set[str]) -> tuple[list[dict],
         "Source URL":                 product.get("url", ""),
         "Original Price (incl. VAT)": orig,
         "Net Price (excl. VAT)":      net,
+        "Competitor Price (EUR)":     comp_price_str,
+        "Margin %":                   margin_pct_str,
         "Motorcycle Make":            make,
         "Motorcycle Model":           model,
         "Motorcycle Year":            year,
