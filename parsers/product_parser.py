@@ -236,6 +236,16 @@ def _apply_dom(soup: BeautifulSoup, page_url: str, p: dict) -> None:
 # Helpers
 # ---------------------------------------------------------------------------
 
+_BREADCRUMB_DENYLIST = {
+    # Navigation / site pages — never a product category
+    "home", "winkel", "shop", "contact", "verzending", "retour",
+    "garantie", "over ons", "faq", "vacatures", "sponsoring",
+    "privacy", "algemene voorwaarden", "tax free", "outlet",
+    "alle merken", "alle producten", "producten", "merken",
+    "onderhoud", "olie", "blog", "nieuws",
+}
+
+
 def _extract_breadcrumbs(soup: BeautifulSoup) -> list[str]:
     crumbs: list[str] = []
     for sel in SELECTORS["breadcrumb"]:
@@ -243,7 +253,7 @@ def _extract_breadcrumbs(soup: BeautifulSoup) -> list[str]:
         if items:
             for a in items:
                 text = a.get_text(strip=True)
-                if text and text.lower() not in ("home", "winkel", "shop", ""):
+                if text and text.lower() not in _BREADCRUMB_DENYLIST:
                     crumbs.append(text)
             break
     return crumbs

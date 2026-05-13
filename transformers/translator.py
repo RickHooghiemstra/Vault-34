@@ -22,8 +22,10 @@ from typing import Optional
 
 # Order matters: longer / multi-word phrases must come before their components
 _TITLE_TERMS: list[tuple[re.Pattern, str]] = [
-    # Multi-word phrases
+    # Multi-word phrases (longest first)
     (re.compile(r"\bVolledig\s+systeem\b",       re.I), "Full System"),
+    (re.compile(r"\bVolledige\s+uitlaat\b",      re.I), "Full System"),    # volledige uitlaat
+    (re.compile(r"\bCompleet\s+systeem\b",       re.I), "Full System"),
     (re.compile(r"\bOptionele\s+bochtenset\b",   re.I), "Optional Header Set"),
     (re.compile(r"\bOptionele\s+collector\b",    re.I), "Optional Collector"),
     (re.compile(r"\bOptionele\s+linkpijp\b",     re.I), "Optional Link Pipe"),
@@ -34,13 +36,17 @@ _TITLE_TERMS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\bKatalysator\b",              re.I), "Cat"),
     (re.compile(r"\bUitlaatbochten\b",           re.I), "Exhaust Headers"),
     (re.compile(r"\bUitlaatpijpen?\b",           re.I), "Exhaust Pipe"),
+    (re.compile(r"\bUitlaatset\b",               re.I), "Exhaust Set"),
+    (re.compile(r"\bUitlaten\b",                 re.I), "Exhausts"),       # plural
     (re.compile(r"\bGeluidsdemper\b",            re.I), "Silencer"),
     (re.compile(r"\bGeluiddemper\b",             re.I), "Silencer"),
     # Single component words
     (re.compile(r"\bLinkpijp\b",                 re.I), "Link Pipe"),
     (re.compile(r"\bBochtenset\b",               re.I), "Header Set"),
+    (re.compile(r"\bDempers\b",                  re.I), "Silencers"),      # plural before singular
     (re.compile(r"\bDemper\b",                   re.I), "Silencer"),
     (re.compile(r"\bEindkap\b",                  re.I), "End Cap"),
+    (re.compile(r"\bCompleet\b",                 re.I), "Complete"),
     (re.compile(r"\bUitlaat\b",                  re.I), "Exhaust"),
     (re.compile(r"\bSysteme?\b",                 re.I), "System"),
     (re.compile(r"\bPijp\b",                     re.I), "Pipe"),
