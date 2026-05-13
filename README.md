@@ -49,38 +49,43 @@ shopify_exports/shopify_import.csv  ← Import in Shopify Admin → Products →
 
 ## Quick Start (Windows)
 
+**First-time setup** (run once):
 ```cmd
-cd C:\path\to\Vault-34
-pip install -r requirements.txt
-python -m playwright install chromium
-copy .env.example .env
-notepad .env
+git clone https://github.com/RickHooghiemstra/Vault-34.git
+cd Vault-34
+git checkout claude/scrape-motorcycle-exhausts-FHcwH
+setup.bat
 ```
 
-Edit `.env` and set `ANTHROPIC_API_KEY=sk-ant-...`, then:
+`setup.bat` installs all dependencies and creates `.env` from the example template.  
+Open `.env` and set your `ANTHROPIC_API_KEY=sk-ant-...` (get one at [console.anthropic.com](https://console.anthropic.com/)).
 
+**Every subsequent run:**
 ```cmd
 run.bat
 ```
 
-`run.bat` pulls the latest code and runs the full scrape automatically.
+`run.bat` pulls the latest code from GitHub and runs the full scrape automatically.
 
 > **IMPORTANT:** uitlaatstore.nl blocks all datacenter/cloud IPs.  
 > Run from a **home or office internet connection**, or set `PROXY_URL` in `.env`.
+
+> **No API key?** Run `python main.py --all-brands --skip-translate` — titles are still translated via the built-in term map, only descriptions stay in Dutch.
 
 ---
 
 ## Quick Start (macOS / Linux)
 
 ```bash
-git clone <repo-url> && cd Vault-34
+git clone https://github.com/RickHooghiemstra/Vault-34.git
+cd Vault-34
+git checkout claude/scrape-motorcycle-exhausts-FHcwH
 pip install -r requirements.txt
-playwright install chromium
 cp .env.example .env
 # Edit .env: set ANTHROPIC_API_KEY=sk-ant-...
 
-python main.py --discover --url https://www.uitlaatstore.nl/s-k6r14-hegeht1
-python main.py --all-brands
+python3 main.py --discover --url https://www.uitlaatstore.nl/s-k6r14-hegeht1
+python3 main.py --all-brands
 ```
 
 ---
@@ -306,19 +311,19 @@ Vault-34/
 |---|---|
 | `NETWORK BLOCKED` / HTTP 403 | Run from a home/office IP, or set `PROXY_URL` in `.env` |
 | Binary garbage in page output | Brotli encoding issue — already fixed (Accept-Encoding: gzip, deflate) |
-| `UnicodeEncodeError` on Windows | Already fixed — all file writes use `encoding="utf-8"` |
+| `UnicodeEncodeError` on Windows | Fixed — `run.bat` sets `chcp 65001` + `PYTHONIOENCODING=utf-8` |
 | `ANTHROPIC_API_KEY not set` | Add API key to `.env`, or use `--skip-translate` |
-| `logs/` directory not found | Run `mkdir logs` and `mkdir images` once before first run |
+| `logs/` directory not found | Created automatically on first run |
 | 0 product URLs for brand | Check the brand slug matches `/alle-merken/{slug}` on uitlaatstore.nl |
 | Price shows `0.00` | Run `--discover` to inspect what the page returns for price |
 | Make/model/year blank | Title regex couldn't match — check `config/makes.py MOTO_MAKES` |
 | Image validation slow | Normal — each image requires a network request (~1–2 s/image) |
-| `playwright` not found on Windows | Use `python -m playwright install chromium` |
+| `python` not found on Windows | Use the full path: `C:\Users\timme\AppData\Local\Python\bin\python3.exe` |
 
 ---
 
 ## Requirements
 
-- Python 3.11+
+- Python 3.11+ (Windows: `C:\Users\timme\AppData\Local\Python\bin\python3.exe`)
 - Home/office internet connection (or residential proxy)
-- `ANTHROPIC_API_KEY` for English translations
+- `ANTHROPIC_API_KEY` for English description translations (titles always translated via built-in term map)

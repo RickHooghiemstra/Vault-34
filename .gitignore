@@ -19,6 +19,10 @@ shopify_exports/*.csv
 shopify_exports/image_manifest.json
 images/
 logs/
+# Stray CSV files dropped in root by older runs
+*.csv
+# Nested accidental clone
+vault-34/
 
 # OS
 .DS_Store
