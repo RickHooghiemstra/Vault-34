@@ -235,6 +235,38 @@ def step_validate_images(products: list[dict]) -> list[dict]:
     return importable
 
 
+def step_download_images(products: list[dict]) -> None:
+    """Download validated images to images/{sku}/01.jpg, 02.jpg, …"""
+    import requests as _requests
+
+    session = _requests.Session()
+    session.headers["User-Agent"] = "Mozilla/5.0 (compatible; Vault34Downloader/1.0)"
+    images_root = Path("images")
+    images_root.mkdir(exist_ok=True)
+
+    for product in products:
+        sku = (product.get("sku") or "").strip().replace("/", "-")
+        if not sku:
+            continue
+        urls = product.get("validated_images") or product.get("images") or []
+        if not urls:
+            continue
+        dest_dir = images_root / sku
+        dest_dir.mkdir(exist_ok=True)
+        for i, url in enumerate(urls[:10], 1):
+            dest = dest_dir / f"{i:02d}.jpg"
+            if dest.exists():
+                continue
+            try:
+                resp = session.get(url, timeout=30)
+                resp.raise_for_status()
+                dest.write_bytes(resp.content)
+            except Exception as exc:
+                log.warning("Image download failed (%s): %s", url, exc)
+
+    log.info("Images downloaded → images/")
+
+
 def step_pricing(products: list[dict]) -> list[dict]:
     """Scrape competitors and apply competitor-aware pricing to all products."""
     from competitor_intel.scrapers.auto_scraper import scrape_all_competitors
