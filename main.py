@@ -237,7 +237,7 @@ def step_validate_images(products: list[dict]) -> list[dict]:
 
 def step_pricing(products: list[dict]) -> list[dict]:
     """Scrape competitors and apply competitor-aware pricing to all products."""
-    from competitor_intel.scrapers.shopify_json import scrape_all_competitors
+    from competitor_intel.scrapers.auto_scraper import scrape_all_competitors
     from pricing.engine import apply_pricing
 
     log.info("=== Competitor pricing ===")

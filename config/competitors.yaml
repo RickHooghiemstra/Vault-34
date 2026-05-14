@@ -1,42 +1,172 @@
-# Competitor Shopify stores for price intelligence.
+# Competitor stores for price intelligence.
 #
 # Fields:
-#   domain       – Shopify store domain (no https://)
-#   name         – Human-readable label used in reports
-#   market       – Market/region code (EU, GB, US, …)
-#   currency     – ISO 4217 currency code for prices listed on the site
-#   includes_vat – true if displayed prices include VAT/sales-tax
+#   domain       – store domain (no https://)
+#   name         – human-readable label used in reports
+#   market       – market/region code (NL, DE, FR, GB, US, JP, AU, EU, …)
+#   currency     – ISO 4217 currency code
+#   includes_vat – true if displayed prices include VAT / GST / consumption tax
+#   type         – scraper backend: shopify | woocommerce | auto (default: auto)
+#                  auto probes Shopify first, then WooCommerce Store API
 #
-# Scraped via GET https://{domain}/products.json?limit=250&page=N
-# The scraper skips a store if it returns 403 / 429 / 451.
+# Scrapers:
+#   shopify     → GET https://{domain}/products.json?limit=250&page=N
+#   woocommerce → GET https://{domain}/wp-json/wc/store/v1/products?per_page=100&page=N
+#
+# The scraper skips a store if it returns 403 / 429 / 451 or exhausts retries.
 
 competitors:
+
+  # ── Netherlands ────────────────────────────────────────────────────────────
   - domain: www.motea.com
-    name: Motea EU
-    market: EU
+    name: Motea NL
+    market: NL
     currency: EUR
     includes_vat: true
+    type: shopify
 
+  - domain: www.thunderbike.nl
+    name: Thunderbike NL
+    market: NL
+    currency: EUR
+    includes_vat: true
+    type: auto
+
+  - domain: www.motoscoot.nl
+    name: MotoScoot NL
+    market: NL
+    currency: EUR
+    includes_vat: true
+    type: auto
+
+  # ── Germany ────────────────────────────────────────────────────────────────
   - domain: www.fc-moto.de
     name: FC-Moto DE
-    market: EU
+    market: DE
     currency: EUR
     includes_vat: true
+    type: shopify
 
   - domain: www.louis.de
     name: Louis DE
-    market: EU
+    market: DE
     currency: EUR
     includes_vat: true
+    type: shopify
 
   - domain: www.polo-motorrad.de
     name: Polo Motorrad DE
-    market: EU
+    market: DE
     currency: EUR
     includes_vat: true
+    type: shopify
 
+  # ── France ─────────────────────────────────────────────────────────────────
+  - domain: www.motoblouz.com
+    name: Motoblouz FR
+    market: FR
+    currency: EUR
+    includes_vat: true
+    type: auto
+
+  - domain: www.dafy-moto.com
+    name: Dafy Moto FR
+    market: FR
+    currency: EUR
+    includes_vat: true
+    type: auto
+
+  - domain: www.speedway.fr
+    name: Speedway FR
+    market: FR
+    currency: EUR
+    includes_vat: true
+    type: auto
+
+  # ── United Kingdom ─────────────────────────────────────────────────────────
   - domain: www.holeshot.co.uk
     name: Holeshot UK
     market: GB
     currency: GBP
     includes_vat: true
+    type: shopify
+
+  - domain: www.sportsbikeshop.co.uk
+    name: SportsBikeShop UK
+    market: GB
+    currency: GBP
+    includes_vat: true
+    type: auto
+
+  - domain: www.wemoto.com
+    name: Wemoto UK
+    market: GB
+    currency: GBP
+    includes_vat: true
+    type: auto
+
+  # ── United States ──────────────────────────────────────────────────────────
+  - domain: www.revzilla.com
+    name: RevZilla US
+    market: US
+    currency: USD
+    includes_vat: false
+    type: auto
+
+  - domain: www.cyclegear.com
+    name: Cycle Gear US
+    market: US
+    currency: USD
+    includes_vat: false
+    type: auto
+
+  - domain: www.jpcycles.com
+    name: JP Cycles US
+    market: US
+    currency: USD
+    includes_vat: false
+    type: auto
+
+  # ── Japan ──────────────────────────────────────────────────────────────────
+  - domain: www.webike.net
+    name: Webike JP
+    market: JP
+    currency: JPY
+    includes_vat: true   # Japanese consumption tax (10%) included in listed prices
+    type: auto
+
+  - domain: www.nankai-buhin.com
+    name: Nankai Buhin JP
+    market: JP
+    currency: JPY
+    includes_vat: true
+    type: auto
+
+  - domain: www.daytona.co.jp
+    name: Daytona JP
+    market: JP
+    currency: JPY
+    includes_vat: true
+    type: auto
+
+  # ── Australia ──────────────────────────────────────────────────────────────
+  - domain: www.mcas.com.au
+    name: MCAS AU
+    market: AU
+    currency: AUD
+    includes_vat: true   # Australian GST (10%) included in listed prices
+    type: auto
+
+  - domain: www.bikebiz.com.au
+    name: Bikebiz AU
+    market: AU
+    currency: AUD
+    includes_vat: true
+    type: auto
+
+  - domain: www.mymoto.com.au
+    name: MyMoto AU
+    market: AU
+    currency: AUD
+    includes_vat: true
+    type: auto

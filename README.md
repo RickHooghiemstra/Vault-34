@@ -10,7 +10,7 @@
 Vault-34 is a fully automated pipeline that:
 
 1. **Scrapes** motorcycle exhaust products from [uitlaatstore.nl](https://www.uitlaatstore.nl/) by exhaust brand
-2. **Scrapes competitors** — fetches live prices from rival Shopify stores via `/products.json`
+2. **Scrapes competitors** — fetches live prices from rival stores via Shopify `/products.json` or WooCommerce Block Store API (auto-detected per store)
 3. **Prices intelligently** — targets the 60th percentile of confirmed competitor prices; falls back to flat 50% markup when data is thin
 4. **Translates** Dutch product descriptions to English via Claude Haiku API
 5. **Validates** all product image URLs (resolution, accessibility, no placeholders) and **downloads** every image locally
@@ -26,7 +26,7 @@ The output is a clean, scalable, SEO-friendly motorcycle exhaust catalog ready f
 uitlaatstore.nl                        competitors (config/competitors.yaml)
       │                                          │
       ▼                                          ▼
-scrapers/uitlaatstore.py       competitor_intel/scrapers/shopify_json.py
+scrapers/uitlaatstore.py       competitor_intel/scrapers/auto_scraper.py  (Shopify + WooCommerce)
       │                                          │
       ▼                                          ▼
 parsers/product_parser.py      competitor_intel/matchers/product_matcher.py
@@ -133,7 +133,7 @@ python main.py --from-cache logs/raw_products.json   # re-run full pipeline from
 
 After uitlaatstore scraping is complete, the pricing engine runs automatically:
 
-1. **Scrapes competitors** — fetches all products from each store in `config/competitors.yaml` via their Shopify `/products.json` endpoint (no browser required, pure HTTP + pagination). 2-second delay between requests, max 3 retries. Any store returning 403/429/451 is skipped automatically.
+1. **Scrapes competitors** — fetches all products from each store in `config/competitors.yaml` via auto-detected API (Shopify `/products.json` or WooCommerce Block Store API). No browser required — pure HTTP + pagination. 2-second delay between requests, max 3 retries. Any store returning 403/429/451 is skipped automatically.
 
 2. **Matches products** — for each of our products, searches every competitor catalog:
    - **SKU exact match** (case-insensitive) → confidence 1.0
@@ -156,24 +156,28 @@ Where `net = uitlaatstore_price / 1.21` (strip Dutch 21% VAT).
 
 ### Adding or removing competitors
 
-Edit `config/competitors.yaml`:
+Edit `config/competitors.yaml`. The scraper supports **Shopify** and **WooCommerce** stores:
 
 ```yaml
 competitors:
   - domain: www.fc-moto.de
     name: FC-Moto DE
-    market: EU
+    market: DE
     currency: EUR
     includes_vat: true
+    type: shopify       # shopify | woocommerce | auto (default)
 
-  - domain: www.holeshot.co.uk
-    name: Holeshot UK
-    market: GB
-    currency: GBP
-    includes_vat: true
+  - domain: www.example-woo.com
+    name: Example WooCommerce
+    market: US
+    currency: USD
+    includes_vat: false
+    type: woocommerce
 ```
 
-Five starter competitors are included. The scraper skips any store that blocks access.
+21 competitors across 7 markets are included (NL, DE, FR, GB, US, JP, AU).  
+The scraper auto-detects the platform when `type` is omitted, and skips any store that blocks access.  
+See [`docs/COMPETITOR_INTEL.md`](docs/COMPETITOR_INTEL.md) for the full list and platform details.
 
 ### Pricing output files
 
@@ -469,9 +473,11 @@ Vault-34-Scraper/
 │   └── cleaner.py           Strip competitor branding from descriptions
 ├── competitor_intel/
 │   ├── scrapers/
-│   │   └── shopify_json.py  Scrape rival Shopify stores via /products.json
+│   │   ├── auto_scraper.py      Dispatcher: auto-detects Shopify vs WooCommerce
+│   │   ├── shopify_json.py      Scrape Shopify stores via /products.json
+│   │   └── woocommerce_json.py  Scrape WooCommerce stores via Block Store API
 │   └── matchers/
-│       └── product_matcher.py  SKU exact + RapidFuzz fuzzy matching (≥0.75)
+│       └── product_matcher.py   SKU exact + RapidFuzz fuzzy matching (≥0.75)
 ├── pricing/
 │   ├── engine.py            p60 pricing, clamp [net×1.35, net×1.80], floor net×1.20
 │   └── fx.py                ECB EUR FX rates (daily cache)
