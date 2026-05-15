@@ -54,10 +54,13 @@ def parse_product(soup: BeautifulSoup, url: str) -> Optional[dict]:
     # --- Strategy 1: JSON-LD ---
     _apply_json_ld(soup, p)
 
-    # --- Strategy 2: OpenGraph ---
+    # --- Strategy 2: Magento gallery JSON (all carousel images) ---
+    _apply_magento_gallery(soup, p)
+
+    # --- Strategy 3: OpenGraph ---
     _apply_opengraph(soup, p)
 
-    # --- Strategy 3: DOM selectors ---
+    # --- Strategy 4: DOM selectors ---
     _apply_dom(soup, url, p)
 
     # Final price: take the minimum of all candidates (sale price < list price)
@@ -148,7 +151,41 @@ def _apply_json_ld(soup: BeautifulSoup, p: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Strategy 2 — OpenGraph
+# Strategy 2 — Magento gallery JSON
+# ---------------------------------------------------------------------------
+
+def _apply_magento_gallery(soup: BeautifulSoup, p: dict) -> None:
+    """
+    Magento embeds the full product image gallery as JSON inside
+    <script type="text/x-magento-init"> blocks. Extract all "full"
+    image URLs from those blocks.
+    """
+    for script in soup.find_all("script", {"type": "text/x-magento-init"}):
+        try:
+            data = json.loads(script.string or "")
+        except (json.JSONDecodeError, TypeError):
+            continue
+        # Walk the nested structure looking for lists of image dicts
+        _extract_magento_images(data, p["images"])
+
+
+def _extract_magento_images(obj, images: list) -> None:
+    """Recursively find image URL strings in Magento init JSON."""
+    if isinstance(obj, dict):
+        for key, val in obj.items():
+            if key in ("full", "img", "src", "url") and isinstance(val, str):
+                val = _strip_magento_cache(val)
+                if _is_valid_image_url(val) and val not in images:
+                    images.append(val)
+            else:
+                _extract_magento_images(val, images)
+    elif isinstance(obj, list):
+        for item in obj:
+            _extract_magento_images(item, images)
+
+
+# ---------------------------------------------------------------------------
+# Strategy 3 — OpenGraph
 # ---------------------------------------------------------------------------
 
 def _apply_opengraph(soup: BeautifulSoup, p: dict) -> None:
@@ -171,7 +208,7 @@ def _apply_opengraph(soup: BeautifulSoup, p: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Strategy 3 — DOM selectors
+# Strategy 4 — DOM selectors
 # ---------------------------------------------------------------------------
 
 def _apply_dom(soup: BeautifulSoup, page_url: str, p: dict) -> None:
