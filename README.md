@@ -353,6 +353,8 @@ Every image URL is validated before export:
 
 After validation, **all valid images are downloaded** to `images/{sku}/01.jpg`, `02.jpg`, … providing a permanent local copy of the full catalog imagery. Files already on disk are skipped (acts as a cache).
 
+**Multi-image extraction:** uitlaatstore.nl embeds the full product carousel as JSON inside `<script type="text/x-magento-init">` blocks. The parser reads all `"full"` image entries from these blocks — so every carousel image is captured, not just the first one from JSON-LD or og:image.
+
 Magento cache URLs (`/media/catalog/product/cache/{hash}/...`) are automatically
 stripped to their full-resolution originals before validation.
 
@@ -463,7 +465,7 @@ Vault-34-Scraper/
 ├── scrapers/
 │   └── uitlaatstore.py      URL discovery + HTML fetching + checkpoints
 ├── parsers/
-│   ├── product_parser.py    JSON-LD → OpenGraph → DOM extraction
+│   ├── product_parser.py    JSON-LD → Magento gallery → OpenGraph → DOM extraction
 │   └── fitment_parser.py    Make / Model / Year extraction
 ├── transformers/
 │   ├── price.py             VAT strip + markup
@@ -510,6 +512,8 @@ Vault-34-Scraper/
 | Make/model/year blank | Title regex couldn't match — check `config/makes.py` |
 | Image validation slow | Normal — each image requires a HEAD + partial GET (~1–2 s/image) |
 | `UnicodeEncodeError` on Windows | Run `run.bat` — it sets `chcp 65001` + `PYTHONIOENCODING=utf-8` |
+| Only 1 image per product | Re-scrape with the updated parser — gallery images now extracted from Magento init JSON |
+| Competitor store returns `JSONDecodeError` | Fixed — stores redirecting to HTML are now detected via `Content-Type` and skipped |
 
 ---
 
