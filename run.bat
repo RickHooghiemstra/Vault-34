@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 set PYTHONIOENCODING=utf-8
-cd /d C:\Users\timme\Vault-34
+cd /d C:\Users\timme\Vault-34-Scraper
 echo.
 
 :: Warn if .env is missing
