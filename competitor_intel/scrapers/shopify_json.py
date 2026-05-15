@@ -56,7 +56,15 @@ def _fetch_page(
         try:
             resp = client.get(url, timeout=_TIMEOUT)
             if resp.status_code == 200:
-                return resp.json().get("products", [])
+                ctype = resp.headers.get("content-type", "")
+                if "json" not in ctype:
+                    log.debug("Competitor %s returned non-JSON content-type: %s", domain, ctype)
+                    return []
+                try:
+                    return resp.json().get("products", [])
+                except Exception:
+                    log.debug("Competitor %s returned non-JSON body on page %d", domain, page)
+                    return []
             if resp.status_code in _BLOCK_STATUSES:
                 log.warning(
                     "Competitor %s blocked (HTTP %d) — skipping",
