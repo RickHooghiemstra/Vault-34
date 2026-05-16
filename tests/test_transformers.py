@@ -15,12 +15,13 @@ class TestPrice:
         assert abs(net_price(121.0) - 100.0) < 0.01
 
     def test_export_price(self):
-        assert abs(export_price(121.0) - 150.0) < 0.01
+        # 121 / 1.21 * 1.35 = 100 * 1.35 = 135.0
+        assert abs(export_price(121.0) - 135.0) < 0.01
 
     def test_known_example(self):
-        # €649 RRP → net €536.36 → export €804.55
+        # €649 RRP → net €536.36 → export €724.09 (at 1.35 markup)
         assert abs(net_price(649.0) - 536.36) < 0.01
-        assert abs(export_price(649.0) - 804.55) < 0.01
+        assert abs(export_price(649.0) - 724.09) < 0.01
 
     def test_format_price(self):
         assert format_price(100.0) == "100.00"

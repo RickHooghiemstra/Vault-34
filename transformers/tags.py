@@ -156,6 +156,10 @@ def build_tags(product: dict) -> list[str]:
 
     tags.append("source:uitlaatstore.nl")
 
+    # Sale badge — set when pricing engine assigned a compareAtPrice to this product
+    if product.get("pricing_meta", {}).get("compare_at_price"):
+        tags.append("SALE")
+
     return tags
 
 

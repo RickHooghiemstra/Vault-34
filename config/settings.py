@@ -46,7 +46,12 @@ PROXY_URL = os.getenv("PROXY_URL", "") or None
 # ---------------------------------------------------------------------------
 
 VAT_RATE = 1.21   # Dutch BTW rate — divided out to get net price
-MARKUP   = 1.50   # 50% export markup applied on top of net price
+MARKUP   = 1.35   # 35% export markup (sharpened 10% from original 1.50 to improve competitiveness)
+
+# compareAtPrice ("was" price) — mirrors the promotional strategy applied in-store
+COMPARE_AT_MARKUP   = 1.50   # "was" price = net × this (original markup, shown as RRP anchor)
+COMPARE_AT_FRACTION = 0.30   # fraction of products displaying the sale badge
+COMPARE_AT_SEED     = 42     # random seed — keeps the 30% selection stable across re-runs
 
 # ---------------------------------------------------------------------------
 # Claude API (translation)

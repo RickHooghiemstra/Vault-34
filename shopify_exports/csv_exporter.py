@@ -149,10 +149,12 @@ def _product_to_rows(product: dict, used_handles: set[str]) -> tuple[list[dict],
     orig        = format_price(product.get("price_raw", 0.0))
 
     # Visibility columns populated from pricing metadata (if available)
-    pricing_meta     = product.get("pricing_meta") or {}
+    pricing_meta      = product.get("pricing_meta") or {}
     competitor_prices = pricing_meta.get("competitor_prices", [])
-    comp_price_str   = format_price(sum(competitor_prices) / len(competitor_prices)) if competitor_prices else ""
-    margin_pct_str   = f"{pricing_meta['margin_pct']:.1f}" if "margin_pct" in pricing_meta else ""
+    comp_price_str    = format_price(sum(competitor_prices) / len(competitor_prices)) if competitor_prices else ""
+    margin_pct_str    = f"{pricing_meta['margin_pct']:.1f}" if "margin_pct" in pricing_meta else ""
+    compare_at_val    = pricing_meta.get("compare_at_price")
+    compare_at_str    = format_price(compare_at_val) if compare_at_val is not None else ""
 
     # Derive English product type from TYPE_ tags (never exposes raw Dutch breadcrumbs)
     product_type = _resolve_product_type(tags_list)
@@ -181,7 +183,7 @@ def _product_to_rows(product: dict, used_handles: set[str]) -> tuple[list[dict],
         "Variant Inventory Policy":   INVENTORY_POLICY,
         "Variant Fulfillment Service": FULFILLMENT,
         "Variant Price":              price,
-        "Variant Compare At Price":   "",
+        "Variant Compare At Price":   compare_at_str,
         "Variant Taxable":            VARIANT_TAXABLE,
         "Image Src":                  images[0] if images else "",
         "Image Position":             "1",

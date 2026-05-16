@@ -19,21 +19,23 @@ import csv
 import json
 import logging
 import math
+import random
 from pathlib import Path
 from typing import Optional
 
 from competitor_intel.matchers.product_matcher import match_all_competitors
-from config.settings import VAT_RATE, LOGS_DIR
+from config.settings import VAT_RATE, LOGS_DIR, COMPARE_AT_MARKUP, COMPARE_AT_FRACTION, COMPARE_AT_SEED
 from pricing.fx import get_rates, to_eur
 
 log = logging.getLogger(__name__)
 
 # ── Pricing constants ────────────────────────────────────────────────────────
-_DEFAULT_MARKUP  = 1.50
+_DEFAULT_MARKUP  = 1.35   # default markup when no competitor data (net × 1.35)
 _MIN_MARGIN_MULT = 1.35   # lower clamp: net × 1.35
 _MAX_MARGIN_MULT = 1.80   # upper clamp: net × 1.80
 _HARD_FLOOR_MULT = 1.20   # absolute floor: net × 1.20
 _P60             = 0.60   # percentile target
+_COMPARE_AT_MARKUP = COMPARE_AT_MARKUP   # "was" price anchor (net × 1.50)
 
 PRICING_REPORT_FILE = LOGS_DIR / "pricing_report.json"
 AUDIT_CSV_FILE      = LOGS_DIR / "competitor_audit.csv"
@@ -43,7 +45,7 @@ _AUDIT_COLUMNS = [
     "Title",
     "URL",
     "Net Cost (EUR)",
-    "Old Price (EUR)",
+    "Compare At Price (EUR)",
     "New Price (EUR)",
     "Margin %",
     "Pricing Method",
@@ -151,6 +153,12 @@ def compute_price(
 
     final_price = _round_to_95(raw_price)
 
+    # "Was" price anchor — always computed; apply_pricing selects 30% that display it
+    compare_at_price = _round_to_95(net_cost * _COMPARE_AT_MARKUP)
+    # Only valid as a strikethrough when it's strictly higher than the actual price
+    if compare_at_price <= final_price:
+        compare_at_price = None
+
     margin_pct = (
         (final_price - net_cost) / net_cost * 100
         if net_cost > 0 else 0.0
@@ -158,7 +166,7 @@ def compute_price(
 
     return final_price, {
         "net_cost":          round(net_cost, 2),
-        "old_price":         old_price,
+        "compare_at_price":  compare_at_price,
         "new_price":         final_price,
         "margin_pct":        round(margin_pct, 1),
         "method":            method,
@@ -183,18 +191,19 @@ def _write_audit_csv(report: list[dict]) -> None:
             writer.writeheader()
 
             for entry in report:
+                compare_at = entry.get("compare_at_price")
                 base = {
-                    "SKU":              entry.get("sku", ""),
-                    "Title":            entry.get("title", ""),
-                    "URL":              entry.get("url", ""),
-                    "Net Cost (EUR)":   entry.get("net_cost", ""),
-                    "Old Price (EUR)":  entry.get("old_price", ""),
-                    "New Price (EUR)":  entry.get("new_price", ""),
-                    "Margin %":         entry.get("margin_pct", ""),
-                    "Pricing Method":   entry.get("method", ""),
-                    "P60 Price (EUR)":  entry.get("p60", "") if entry.get("p60") is not None else "",
-                    "Min Clamp (EUR)":  entry.get("min_clamp", ""),
-                    "Max Clamp (EUR)":  entry.get("max_clamp", ""),
+                    "SKU":                     entry.get("sku", ""),
+                    "Title":                   entry.get("title", ""),
+                    "URL":                     entry.get("url", ""),
+                    "Net Cost (EUR)":          entry.get("net_cost", ""),
+                    "Compare At Price (EUR)":  compare_at if compare_at is not None else "",
+                    "New Price (EUR)":         entry.get("new_price", ""),
+                    "Margin %":               entry.get("margin_pct", ""),
+                    "Pricing Method":          entry.get("method", ""),
+                    "P60 Price (EUR)":         entry.get("p60", "") if entry.get("p60") is not None else "",
+                    "Min Clamp (EUR)":         entry.get("min_clamp", ""),
+                    "Max Clamp (EUR)":         entry.get("max_clamp", ""),
                 }
 
                 metas = entry.get("competitor_meta", [])
@@ -242,6 +251,17 @@ def apply_pricing(
             **meta,
         })
 
+    # Randomly assign compareAtPrice to COMPARE_AT_FRACTION of products.
+    # Seeded for reproducibility; products without a valid compare_at_price are skipped.
+    eligible = [p for p in products if p.get("pricing_meta", {}).get("compare_at_price")]
+    rng = random.Random(COMPARE_AT_SEED)
+    rng.shuffle(eligible)
+    sale_count = round(len(eligible) * COMPARE_AT_FRACTION)
+    sale_set   = {id(p) for p in eligible[sale_count:]}   # the 70% that don't get it
+    for p in eligible:
+        if id(p) in sale_set:
+            p["pricing_meta"]["compare_at_price"] = None
+
     # Persist JSON report + audit CSV
     try:
         PRICING_REPORT_FILE.write_text(
@@ -254,11 +274,12 @@ def apply_pricing(
 
     _write_audit_csv(report)
 
+    sale_products = sum(1 for p in products if p.get("pricing_meta", {}).get("compare_at_price"))
     competitor_count = sum(1 for r in report if r["method"] == "competitor")
     default_count    = len(report) - competitor_count
     log.info(
-        "Pricing complete: %d competitor-based, %d default (flat %.0f%%)",
-        competitor_count, default_count, (_DEFAULT_MARKUP - 1) * 100,
+        "Pricing complete: %d competitor-based, %d default (%.0f%% markup); %d/%d products show sale price",
+        competitor_count, default_count, (_DEFAULT_MARKUP - 1) * 100, sale_products, len(products),
     )
 
     return products, report
