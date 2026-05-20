@@ -1,0 +1,253 @@
+{%- comment -%}
+  EXHAUST SOUND / MEDIA MODULE
+  Central section for showcasing exhaust sounds and video.
+  Tabs: different configurations (stock vs slip-on vs full system).
+{%- endcomment -%}
+
+<section class="section" style="background:var(--bg-base)">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="reveal" style="text-align:center;max-width:600px;margin:0 auto var(--space-12)">
+      {%- if section.settings.label != blank -%}
+        <p class="label" style="margin-bottom:var(--space-4)">{{ section.settings.label }}</p>
+      {%- endif -%}
+      <h2 class="h2">{{ section.settings.title | default: 'Hear the Difference' }}</h2>
+      {%- if section.settings.subtitle != blank -%}
+        <p style="margin-top:var(--space-4);color:var(--text-muted);font-size:var(--text-lg)">{{ section.settings.subtitle }}</p>
+      {%- endif -%}
+    </div>
+
+    <!-- Sound module -->
+    <div class="exhaust-module reveal" data-sound-player>
+
+      <!-- Video area -->
+      {%- assign first_block = section.blocks | first -%}
+      <div class="exhaust-module__video-wrap" id="sound-video-wrap">
+        {%- if section.settings.video != blank -%}
+          <video
+            class="exhaust-module__video"
+            src="{{ section.settings.video }}"
+            loop muted playsinline
+            id="exhaust-video"
+            poster="{{ section.settings.video_poster | image_url: width: 1200 }}"
+          ></video>
+        {%- elsif section.settings.video_poster != blank -%}
+          <img
+            src="{{ section.settings.video_poster | image_url: width: 1200 }}"
+            alt="Exhaust preview"
+            width="1200" height="675"
+            loading="lazy"
+            style="width:100%;height:100%;object-fit:cover;filter:saturate(.5)"
+          >
+        {%- else -%}
+          <div style="width:100%;height:100%;min-height:400px;background:linear-gradient(135deg,var(--bg-elevated),var(--purple-900));display:flex;align-items:center;justify-content:center">
+            <svg width="64" height="64" fill="none" style="opacity:.2">
+              <circle cx="32" cy="32" r="30" stroke="currentColor" stroke-width="2"/>
+              <path d="M26 20l20 12-20 12V20z" fill="currentColor"/>
+            </svg>
+          </div>
+        {%- endif -%}
+
+        <!-- Play/pause button -->
+        <button
+          class="exhaust-module__play"
+          data-sound-play
+          {%- if section.settings.audio != blank -%}
+            data-sound-src="{{ section.settings.audio | file_url }}"
+          {%- endif -%}
+          aria-label="Play exhaust sound"
+        >
+          <svg width="24" height="24" fill="none" data-icon-play>
+            <path d="M8 5l12 7-12 7V5z" fill="white"/>
+          </svg>
+          <svg width="24" height="24" fill="none" data-icon-pause style="display:none">
+            <rect x="6" y="5" width="4" height="14" rx="1" fill="white"/>
+            <rect x="14" y="5" width="4" height="14" rx="1" fill="white"/>
+          </svg>
+        </button>
+
+        <!-- Sound intensity badge -->
+        <div style="
+          position:absolute;top:var(--space-4);right:var(--space-4);
+          background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+          border:1px solid var(--border-purple);
+          border-radius:var(--radius-full);
+          padding:var(--space-1) var(--space-3);
+          display:flex;align-items:center;gap:var(--space-2);
+          font-size:var(--text-xs);color:var(--purple-200);
+          font-weight:var(--font-semibold);
+          letter-spacing:var(--tracking-wider);
+          text-transform:uppercase;
+        ">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--purple-400);animation:pulse 1.5s ease-in-out infinite"></span>
+          Live Sound
+        </div>
+      </div>
+
+      <!-- Sound tabs (different configs) -->
+      {%- if section.blocks.size > 0 -%}
+        <div class="sound-tabs" role="tablist" aria-label="Exhaust configurations">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'sound_config' -%}
+              <button
+                class="sound-tab{% if forloop.first %} is-active{% endif %}"
+                role="tab"
+                aria-selected="{{ forloop.first }}"
+                aria-controls="sound-panel-{{ block.id }}"
+                {%- if block.settings.audio_url != blank -%}
+                  data-sound-src="{{ block.settings.audio_url | file_url }}"
+                {%- endif -%}
+                {{ block.shopify_attributes }}
+              >
+                <span class="sound-tab__dot"></span>
+                {{ block.settings.label }}
+              </button>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+
+        <!-- Config details panels -->
+        <div style="padding:var(--space-5) var(--space-6)">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'sound_config' -%}
+              <div
+                id="sound-panel-{{ block.id }}"
+                role="tabpanel"
+                style="{% unless forloop.first %}display:none{% endunless %}"
+                {{ block.shopify_attributes }}
+              >
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-5)">
+                  {%- if block.settings.spec1_label != blank -%}
+                    <div>
+                      <p class="label" style="margin-bottom:var(--space-1);font-size:10px">{{ block.settings.spec1_label }}</p>
+                      <p style="font-size:var(--text-sm);font-weight:var(--font-semibold);font-family:var(--font-mono);color:var(--text-primary)">{{ block.settings.spec1_value }}</p>
+                    </div>
+                  {%- endif -%}
+                  {%- if block.settings.spec2_label != blank -%}
+                    <div>
+                      <p class="label" style="margin-bottom:var(--space-1);font-size:10px">{{ block.settings.spec2_label }}</p>
+                      <p style="font-size:var(--text-sm);font-weight:var(--font-semibold);font-family:var(--font-mono);color:var(--text-primary)">{{ block.settings.spec2_value }}</p>
+                    </div>
+                  {%- endif -%}
+                  {%- if block.settings.spec3_label != blank -%}
+                    <div>
+                      <p class="label" style="margin-bottom:var(--space-1);font-size:10px">{{ block.settings.spec3_label }}</p>
+                      <p style="font-size:var(--text-sm);font-weight:var(--font-semibold);font-family:var(--font-mono);color:var(--text-primary)">{{ block.settings.spec3_value }}</p>
+                    </div>
+                  {%- endif -%}
+                </div>
+
+                <!-- Waveform visualizer -->
+                <div class="sound-waveform" style="margin-top:var(--space-4)" aria-hidden="true">
+                  {%- for i in (1..32) -%}
+                    {%- assign h = i | modulo: 7 | plus: 2 -%}
+                    <div
+                      class="sound-waveform__bar"
+                      style="
+                        height:{{ h | times: 4 }}px;
+                        animation-delay:{{ forloop.index | times: 0.05 }}s;
+                        animation-duration:{{ h | times: 0.1 | plus: 0.4 }}s;
+                      "
+                    ></div>
+                  {%- endfor -%}
+                </div>
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+
+    </div><!-- /exhaust-module -->
+
+  </div>
+</section>
+
+<!-- Tab switching logic -->
+<script>
+document.querySelectorAll('.sound-tabs .sound-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    var module = tab.closest('.exhaust-module');
+    if (!module) return;
+
+    module.querySelectorAll('.sound-tab').forEach(function(t) {
+      t.classList.remove('is-active');
+      t.setAttribute('aria-selected', 'false');
+    });
+    tab.classList.add('is-active');
+    tab.setAttribute('aria-selected', 'true');
+
+    var panelId = tab.getAttribute('aria-controls');
+    module.querySelectorAll('[role="tabpanel"]').forEach(function(p) {
+      p.style.display = p.id === panelId ? 'block' : 'none';
+    });
+  });
+});
+</script>
+
+{% schema %}
+{
+  "name": "Exhaust Sound Module",
+  "settings": [
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Eyebrow label",
+      "default": "Sound Demo"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Hear the Difference"
+    },
+    {
+      "type": "textarea",
+      "id": "subtitle",
+      "label": "Subtitle"
+    },
+    {
+      "type": "text",
+      "id": "video",
+      "label": "Video URL (CDN hosted)"
+    },
+    {
+      "type": "image_picker",
+      "id": "video_poster",
+      "label": "Video poster image"
+    },
+    {
+      "type": "text",
+      "id": "audio",
+      "label": "Default audio file (Shopify Files)"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "sound_config",
+      "name": "Sound Configuration",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Tab label", "default": "Slip-On" },
+        { "type": "text", "id": "audio_url", "label": "Audio file" },
+        { "type": "text", "id": "spec1_label", "label": "Spec 1 label", "default": "Sound Level" },
+        { "type": "text", "id": "spec1_value", "label": "Spec 1 value", "default": "102 dB" },
+        { "type": "text", "id": "spec2_label", "label": "Spec 2 label", "default": "Weight" },
+        { "type": "text", "id": "spec2_value", "label": "Spec 2 value", "default": "1.4 kg" },
+        { "type": "text", "id": "spec3_label", "label": "Spec 3 label", "default": "Power Gain" },
+        { "type": "text", "id": "spec3_value", "label": "Spec 3 value", "default": "+4 HP" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Exhaust Sound Module",
+      "blocks": [
+        { "type": "sound_config", "settings": { "label": "Stock", "spec1_value": "89 dB", "spec2_value": "3.8 kg", "spec3_value": "Baseline" }},
+        { "type": "sound_config", "settings": { "label": "Slip-On", "spec1_value": "96 dB", "spec2_value": "1.9 kg", "spec3_value": "+2 HP" }},
+        { "type": "sound_config", "settings": { "label": "Full System", "spec1_value": "104 dB", "spec2_value": "1.1 kg", "spec3_value": "+8 HP" }},
+        { "type": "sound_config", "settings": { "label": "Race Baffle", "spec1_value": "110 dB", "spec2_value": "0.9 kg", "spec3_value": "+10 HP" }}
+      ]
+    }
+  ]
+}
+{% endschema %}

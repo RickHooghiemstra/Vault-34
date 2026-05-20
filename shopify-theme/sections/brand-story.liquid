@@ -1,0 +1,192 @@
+{%- comment -%}
+  BRAND STORY / ABOUT SECTION
+  Split layout: fullbleed image left, content right.
+  Includes stats grid and optional video CTA.
+{%- endcomment -%}
+
+<section class="brand-story section-lg">
+  <div class="brand-story__split">
+
+    <!-- Media side -->
+    <div class="brand-story__media reveal-left">
+      {%- if section.settings.image != blank -%}
+        <img
+          src="{{ section.settings.image | image_url: width: 1000 }}"
+          srcset="
+            {{ section.settings.image | image_url: width: 600 }} 600w,
+            {{ section.settings.image | image_url: width: 1000 }} 1000w,
+            {{ section.settings.image | image_url: width: 1400 }} 1400w
+          "
+          sizes="(max-width: 768px) 100vw, 50vw"
+          alt="{{ section.settings.image.alt | escape | default: 'Brand story' }}"
+          width="1000"
+          height="900"
+          loading="lazy"
+        >
+      {%- else -%}
+        <div style="width:100%;height:100%;min-height:600px;background:linear-gradient(135deg,var(--purple-900),var(--bg-elevated));display:flex;align-items:center;justify-content:center">
+          <p style="color:var(--text-subtle);font-size:var(--text-sm)">Add an image in the theme editor</p>
+        </div>
+      {%- endif -%}
+
+      <!-- Floating spec badge -->
+      {%- if section.settings.badge_text != blank -%}
+        <div style="
+          position:absolute;bottom:var(--space-8);left:var(--space-8);
+          background:rgba(9,9,11,.9);backdrop-filter:blur(16px);
+          border:1px solid var(--border-purple);
+          border-radius:var(--radius-xl);
+          padding:var(--space-4) var(--space-5);
+          max-width:200px;
+          z-index:2;
+        ">
+          <p class="label" style="margin-bottom:var(--space-2)">{{ section.settings.badge_label | default: 'Spec' }}</p>
+          <p style="font-size:var(--text-sm);color:var(--text-secondary)">{{ section.settings.badge_text }}</p>
+        </div>
+      {%- endif -%}
+    </div>
+
+    <!-- Content side -->
+    <div class="brand-story__content reveal-right">
+      {%- if section.settings.label != blank -%}
+        <p class="label" style="margin-bottom:var(--space-4)">{{ section.settings.label }}</p>
+      {%- endif -%}
+
+      <h2 class="h2" style="margin-bottom:var(--space-5)">{{ section.settings.title }}</h2>
+
+      {%- if section.settings.body != blank -%}
+        <div style="font-size:var(--text-lg);color:var(--text-muted);line-height:var(--leading-relaxed);margin-bottom:var(--space-6)">
+          {{ section.settings.body }}
+        </div>
+      {%- endif -%}
+
+      {%- if section.settings.body2 != blank -%}
+        <div style="font-size:var(--text-base);color:var(--text-subtle);line-height:var(--leading-relaxed);margin-bottom:var(--space-8)">
+          {{ section.settings.body2 }}
+        </div>
+      {%- endif -%}
+
+      <!-- Stats grid -->
+      {%- if section.blocks.size > 0 -%}
+        <div class="brand-stats">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'stat' -%}
+              <div class="brand-stat" {{ block.shopify_attributes }}>
+                <div class="brand-stat__value">{{ block.settings.value }}</div>
+                <div class="brand-stat__label">{{ block.settings.label }}</div>
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+
+      <!-- CTAs -->
+      <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-8)">
+        {%- if section.settings.cta_primary_label != blank -%}
+          <a href="{{ section.settings.cta_primary_url | default: '/collections/all' }}" class="btn btn-primary btn-lg">
+            {{ section.settings.cta_primary_label }}
+            <svg width="14" height="14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        {%- endif -%}
+        {%- if section.settings.cta_secondary_label != blank -%}
+          <a href="{{ section.settings.cta_secondary_url | default: '/pages/about' }}" class="btn btn-secondary btn-lg">
+            {{ section.settings.cta_secondary_label }}
+          </a>
+        {%- endif -%}
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /split -->
+</section>
+
+{% schema %}
+{
+  "name": "Brand Story",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Side image"
+    },
+    {
+      "type": "text",
+      "id": "badge_label",
+      "label": "Floating badge label",
+      "default": "Engineering"
+    },
+    {
+      "type": "text",
+      "id": "badge_text",
+      "label": "Floating badge text",
+      "default": "CNC titanium baffles. 2.3kg weight savings."
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Eyebrow label",
+      "default": "Our Story"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Built by Riders, For Riders"
+    },
+    {
+      "type": "richtext",
+      "id": "body",
+      "label": "Body text",
+      "default": "<p>We started in a garage in 2009 with one obsession: making motorcycles sound and perform exactly how they were meant to. Not quieter. Not heavier. Better.</p>"
+    },
+    {
+      "type": "richtext",
+      "id": "body2",
+      "label": "Secondary body text"
+    },
+    {
+      "type": "text",
+      "id": "cta_primary_label",
+      "label": "Primary CTA",
+      "default": "Shop Exhausts"
+    },
+    {
+      "type": "url",
+      "id": "cta_primary_url"
+    },
+    {
+      "type": "text",
+      "id": "cta_secondary_label",
+      "label": "Secondary CTA",
+      "default": "Our Story"
+    },
+    {
+      "type": "url",
+      "id": "cta_secondary_url"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "stat",
+      "name": "Stat",
+      "limit": 4,
+      "settings": [
+        { "type": "text", "id": "value", "label": "Value", "default": "15+" },
+        { "type": "text", "id": "label", "label": "Label", "default": "Years experience" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Brand Story",
+      "blocks": [
+        { "type": "stat", "settings": { "value": "15+", "label": "Years experience" }},
+        { "type": "stat", "settings": { "value": "500+", "label": "Bike models" }},
+        { "type": "stat", "settings": { "value": "15k+", "label": "Happy riders" }},
+        { "type": "stat", "settings": { "value": "4.9★", "label": "Average review" }}
+      ]
+    }
+  ]
+}
+{% endschema %}

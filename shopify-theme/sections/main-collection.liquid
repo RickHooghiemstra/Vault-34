@@ -1,0 +1,164 @@
+{%- comment -%}
+  COLLECTION PAGE — MAIN SECTION
+  Hero banner, sticky filter bar, product grid with fitment filter.
+{%- endcomment -%}
+
+<!-- Collection Hero -->
+<div class="collection-hero">
+  {%- if collection.image -%}
+    <img
+      class="collection-hero__bg"
+      src="{{ collection.image | image_url: width: 1800 }}"
+      srcset="{{ collection.image | image_url: width: 800 }} 800w, {{ collection.image | image_url: width: 1400 }} 1400w, {{ collection.image | image_url: width: 1800 }} 1800w"
+      sizes="100vw"
+      alt="{{ collection.image.alt | escape | default: collection.title }}"
+      fetchpriority="high"
+      loading="eager"
+    >
+  {%- endif -%}
+  <div class="collection-hero__overlay"></div>
+  <div class="collection-hero__content">
+    <div class="container" style="padding-inline:0">
+      {%- if collection.description != blank -%}
+        <p class="label" style="margin-bottom:var(--space-3)">Collection</p>
+      {%- endif -%}
+      <h1 class="h1">{{ collection.title }}</h1>
+      {%- if collection.description != blank -%}
+        <p style="margin-top:var(--space-3);font-size:var(--text-lg);color:var(--text-muted);max-width:600px">
+          {{ collection.description | strip_html | truncatewords: 30 }}
+        </p>
+      {%- endif -%}
+      <p style="margin-top:var(--space-4);font-size:var(--text-sm);color:var(--text-subtle)">
+        {{ collection.products_count }} products
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar" id="filter-bar">
+  <div class="filter-bar__inner">
+    <!-- Sort -->
+    <select
+      class="form-select"
+      style="height:36px;padding:.3rem .75rem;font-size:var(--text-sm);padding-right:2rem;flex-shrink:0;min-width:160px"
+      onchange="window.location = window.location.pathname + '?sort_by=' + this.value"
+      aria-label="Sort products"
+    >
+      {%- assign sort_options = 'manual,best-selling,title-ascending,title-descending,price-ascending,price-descending,created-descending' | split: ',' -%}
+      {%- assign sort_labels  = 'Featured,Best Selling,Name A–Z,Name Z–A,Price Low–High,Price High–Low,Newest First' | split: ',' -%}
+      {%- for option in sort_options -%}
+        <option
+          value="{{ option }}"
+          {% if collection.sort_by == option %}selected{% endif %}
+        >
+          {{ sort_labels[forloop.index0] }}
+        </option>
+      {%- endfor -%}
+    </select>
+
+    <!-- Divider -->
+    <div style="width:1px;height:24px;background:var(--border-subtle);flex-shrink:0"></div>
+
+    <!-- Active filters + quick filter chips from product tags -->
+    {%- assign current_tags = current_tags | default: '' -%}
+
+    <!-- Clear all -->
+    {%- if current_tags != '' -%}
+      <a href="{{ collection.url }}" class="filter-chip" style="color:var(--color-error);border-color:rgba(239,68,68,.25)">
+        Clear all
+        <span class="filter-chip__remove" aria-hidden="true">×</span>
+      </a>
+    {%- endif -%}
+
+    <!-- Tag filters -->
+    {%- assign filter_tags = 'slip-on,full-system,carbon,titanium,race-series,street,bestseller' | split: ',' -%}
+    {%- for tag in filter_tags -%}
+      {%- assign tag_handle = tag | handleize -%}
+      {%- if current_tags contains tag -%}
+        <a href="{{ collection.url | append: '/' | append: tag_handle }}" class="filter-chip is-active">
+          {{ tag | replace: '-', ' ' | capitalize }}
+          <span class="filter-chip__remove" aria-hidden="true">×</span>
+        </a>
+      {%- else -%}
+        <a href="{{ collection.url | append: '/' | append: tag_handle }}" class="filter-chip">
+          {{ tag | replace: '-', ' ' | capitalize }}
+        </a>
+      {%- endif -%}
+    {%- endfor -%}
+
+    <!-- Fitment tag (from URL param) -->
+    {%- assign fitment_tag = request.param_name | downcase -%}
+
+  </div>
+</div>
+
+<!-- Products Grid -->
+<section style="padding-block:var(--space-10) var(--space-16);background:var(--bg-base)">
+  <div class="container">
+    {%- if collection.products.size > 0 -%}
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:var(--space-6)">
+        {%- for product in collection.products -%}
+          {%- render 'product-card', product: product, index: forloop.index -%}
+        {%- endfor -%}
+      </div>
+
+      <!-- Pagination -->
+      {%- if paginate.pages > 1 -%}
+        <div style="display:flex;justify-content:center;gap:var(--space-2);margin-top:var(--space-12)">
+          {%- if paginate.previous -%}
+            <a href="{{ paginate.previous.url }}" class="btn btn-secondary">← Prev</a>
+          {%- endif -%}
+          {%- for part in paginate.parts -%}
+            {%- if part.is_link -%}
+              <a href="{{ part.url }}" class="btn btn-ghost">{{ part.title }}</a>
+            {%- else -%}
+              <span class="btn btn-primary btn-sm" style="pointer-events:none">{{ part.title }}</span>
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if paginate.next -%}
+            <a href="{{ paginate.next.url }}" class="btn btn-secondary">Next →</a>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    {%- else -%}
+      <div style="text-align:center;padding:var(--space-24) 0;color:var(--text-subtle)">
+        <svg width="64" height="64" fill="none" style="margin:0 auto var(--space-6);opacity:.3">
+          <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2"/>
+          <path d="M24 24l16 16M40 24L24 40" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <h2 class="h3" style="margin-bottom:var(--space-4)">No products found</h2>
+        <p style="margin-bottom:var(--space-6)">Try adjusting your filters or browse all products.</p>
+        <a href="{{ collection.url }}" class="btn btn-primary">Clear Filters</a>
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Collection Main",
+  "settings": [
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "label": "Products per page",
+      "min": 8,
+      "max": 48,
+      "step": 4,
+      "default": 24
+    },
+    {
+      "type": "select",
+      "id": "default_columns",
+      "label": "Default grid columns",
+      "options": [
+        { "value": "2", "label": "2" },
+        { "value": "3", "label": "3" },
+        { "value": "4", "label": "4" }
+      ],
+      "default": "3"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,136 @@
+{%- comment -%}
+  FEATURED COLLECTION SECTION
+  Grid of product cards from a selected collection.
+  Supports 3–4 column layouts, label, title, CTA.
+{%- endcomment -%}
+
+{%- liquid
+  assign collection = collections[section.settings.collection]
+  assign products   = collection.products | default: blank
+  assign limit      = section.settings.product_limit | default: 8
+-%}
+
+<section class="section" style="background:{{ section.settings.bg == 'elevated' ? 'var(--bg-elevated)' : 'var(--bg-base)' }}">
+  <div class="container">
+
+    <!-- Section header -->
+    <div class="section-header reveal" style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:var(--space-10);gap:var(--space-4);flex-wrap:wrap">
+      <div>
+        {%- if section.settings.label != blank -%}
+          <p class="label" style="margin-bottom:var(--space-3)">{{ section.settings.label }}</p>
+        {%- endif -%}
+        <h2 class="h2" style="max-width:600px">{{ section.settings.title }}</h2>
+        {%- if section.settings.subtitle != blank -%}
+          <p style="margin-top:var(--space-3);font-size:var(--text-lg);color:var(--text-muted);max-width:500px">{{ section.settings.subtitle }}</p>
+        {%- endif -%}
+      </div>
+      {%- if section.settings.cta_label != blank -%}
+        <a
+          href="{{ collection.url | default: '/collections/all' }}"
+          class="btn btn-secondary"
+          style="flex-shrink:0"
+        >
+          {{ section.settings.cta_label }}
+          <svg width="14" height="14" fill="none">
+            <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      {%- endif -%}
+    </div>
+
+    <!-- Product grid -->
+    {%- if products != blank -%}
+      <div class="grid sm:grid-cols-2 lg:grid-cols-{{ section.settings.columns }}" style="grid-template-columns:repeat({{ section.settings.columns }},1fr)">
+        {%- for product in products limit: limit -%}
+          {%- render 'product-card', product: product, index: forloop.index -%}
+        {%- endfor -%}
+      </div>
+    {%- else -%}
+      <!-- Skeleton placeholder in theme editor -->
+      <div class="grid" style="grid-template-columns:repeat({{ section.settings.columns }},1fr)">
+        {%- for i in (1..4) -%}
+          <div class="product-card">
+            <div class="skeleton skeleton-card"></div>
+            <div class="product-card__body">
+              <div class="skeleton skeleton-text" style="width:40%;margin-bottom:var(--space-2)"></div>
+              <div class="skeleton skeleton-text" style="margin-bottom:var(--space-2)"></div>
+              <div class="skeleton skeleton-text" style="width:60%"></div>
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Featured Collection",
+  "settings": [
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Eyebrow label",
+      "default": "Top Sellers"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Section title",
+      "default": "Best-Selling Exhaust Systems"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subtitle (optional)"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "View all CTA label",
+      "default": "View All"
+    },
+    {
+      "type": "range",
+      "id": "product_limit",
+      "label": "Number of products",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 8
+    },
+    {
+      "type": "select",
+      "id": "columns",
+      "label": "Grid columns (desktop)",
+      "options": [
+        { "value": "2", "label": "2 columns" },
+        { "value": "3", "label": "3 columns" },
+        { "value": "4", "label": "4 columns" }
+      ],
+      "default": "4"
+    },
+    {
+      "type": "select",
+      "id": "bg",
+      "label": "Background",
+      "options": [
+        { "value": "base", "label": "Dark base" },
+        { "value": "elevated", "label": "Elevated" }
+      ],
+      "default": "base"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured Collection"
+    }
+  ]
+}
+{% endschema %}

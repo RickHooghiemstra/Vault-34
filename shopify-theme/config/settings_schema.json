@@ -1,0 +1,211 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name":    "Vault 34 Premium Moto",
+    "theme_version": "1.0.0",
+    "theme_author":  "Vault 34",
+    "theme_documentation_url": "https://vault34.com/theme-docs",
+    "theme_support_url": "https://vault34.com/support"
+  },
+  {
+    "name": "Brand",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Logo image"
+      },
+      {
+        "type": "image_picker",
+        "id": "logo_dark",
+        "label": "Logo (dark variant, optional)"
+      },
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "Favicon"
+      },
+      {
+        "type": "image_picker",
+        "id": "share_image",
+        "label": "Default social sharing image"
+      },
+      {
+        "type": "text",
+        "id": "tagline",
+        "label": "Brand tagline",
+        "default": "Premium Exhaust & Performance"
+      },
+      {
+        "type": "text",
+        "id": "site_description",
+        "label": "Site description (SEO)",
+        "default": "Premium motorcycle exhaust systems for performance riders. Slip-ons, full systems, carbon, titanium. Fits 500+ bike models."
+      },
+      {
+        "type": "text",
+        "id": "footer_tagline",
+        "label": "Footer tagline",
+        "default": "Premium exhaust systems for performance riders. Built for those who demand more."
+      }
+    ]
+  },
+  {
+    "name": "Colors",
+    "settings": [
+      {
+        "type": "color",
+        "id": "color_bg_base",
+        "label": "Background base",
+        "default": "#09090b"
+      },
+      {
+        "type": "color",
+        "id": "color_bg_elevated",
+        "label": "Background elevated",
+        "default": "#111113"
+      },
+      {
+        "type": "color",
+        "id": "color_purple_primary",
+        "label": "Primary accent (purple)",
+        "default": "#7c3aed"
+      },
+      {
+        "type": "color",
+        "id": "color_purple_light",
+        "label": "Accent light",
+        "default": "#8b5cf6"
+      },
+      {
+        "type": "color",
+        "id": "color_text_primary",
+        "label": "Primary text",
+        "default": "#fafafa"
+      },
+      {
+        "type": "color",
+        "id": "color_text_muted",
+        "label": "Muted text",
+        "default": "#a1a1aa"
+      }
+    ]
+  },
+  {
+    "name": "Typography",
+    "settings": [
+      {
+        "type": "font_picker",
+        "id": "font_heading",
+        "label": "Heading font",
+        "default": "inter_n7"
+      },
+      {
+        "type": "font_picker",
+        "id": "font_body",
+        "label": "Body font",
+        "default": "inter_n4"
+      }
+    ]
+  },
+  {
+    "name": "Navigation",
+    "settings": [
+      {
+        "type": "link_list",
+        "id": "main_menu",
+        "label": "Main menu",
+        "default": "main-menu"
+      },
+      {
+        "type": "link_list",
+        "id": "mobile_menu",
+        "label": "Mobile menu",
+        "default": "main-menu"
+      },
+      {
+        "type": "link_list",
+        "id": "footer_products",
+        "label": "Footer: Products menu",
+        "default": "footer"
+      },
+      {
+        "type": "link_list",
+        "id": "footer_support",
+        "label": "Footer: Support menu",
+        "default": "footer"
+      },
+      {
+        "type": "link_list",
+        "id": "footer_company",
+        "label": "Footer: Company menu",
+        "default": "footer"
+      }
+    ]
+  },
+  {
+    "name": "Social",
+    "settings": [
+      { "type": "url",  "id": "social_instagram", "label": "Instagram URL" },
+      { "type": "url",  "id": "social_youtube",   "label": "YouTube URL" },
+      { "type": "url",  "id": "social_facebook",  "label": "Facebook URL" },
+      { "type": "url",  "id": "social_tiktok",    "label": "TikTok URL" },
+      { "type": "url",  "id": "social_twitter",   "label": "X / Twitter URL" }
+    ]
+  },
+  {
+    "name": "Cart",
+    "settings": [
+      {
+        "type": "select",
+        "id": "cart_type",
+        "label": "Cart type",
+        "options": [
+          { "value": "drawer", "label": "Drawer (recommended)" },
+          { "value": "page",   "label": "Cart page" }
+        ],
+        "default": "drawer"
+      },
+      {
+        "type": "text",
+        "id": "cart_upsell_message",
+        "label": "Cart upsell message",
+        "default": "Add a heat shield for an extra 6 months warranty on your order!"
+      }
+    ]
+  },
+  {
+    "name": "Account",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "show_account",
+        "label": "Show account icon in header",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_customer_accounts",
+        "label": "Enable customer accounts",
+        "default": false
+      }
+    ]
+  },
+  {
+    "name": "Performance",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "enable_page_loading",
+        "label": "Show page loading bar",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_animations",
+        "label": "Enable scroll animations",
+        "default": true
+      }
+    ]
+  }
+]

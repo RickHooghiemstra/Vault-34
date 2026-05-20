@@ -1,0 +1,63 @@
+{
+  "general": {
+    "shopify_challenge": {
+      "resolve": "Click link below"
+    },
+    "newsletter_form": {
+      "confirmation": "Thanks for subscribing!"
+    },
+    "pagination": {
+      "label": "Pagination"
+    }
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "Add to Cart",
+      "sold_out": "Sold Out",
+      "unavailable": "Unavailable",
+      "from_text_html": "From <span>{{price}}</span>",
+      "on_sale": "Sale",
+      "quantity": {
+        "label": "Quantity",
+        "increase": "Increase quantity",
+        "decrease": "Decrease quantity"
+      }
+    }
+  },
+  "cart": {
+    "label": "Cart",
+    "title": "Your Cart",
+    "empty": "Your cart is empty",
+    "count_items": {
+      "one": "{{ count }} item",
+      "other": "{{ count }} items"
+    },
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "checkout": "Secure Checkout",
+    "view_cart": "View Full Cart"
+  },
+  "navigation": {
+    "search": "Search",
+    "mobile_menu": "Menu",
+    "close": "Close"
+  },
+  "footer": {
+    "social": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "youtube": "YouTube",
+      "tiktok": "TikTok"
+    }
+  },
+  "search": {
+    "placeholder": "Search exhausts, brands, models…",
+    "results_title": "Results for",
+    "no_results": "No results found for"
+  },
+  "accessibility": {
+    "skip_to_content": "Skip to content",
+    "close_modal": "Close",
+    "product_image": "Product image"
+  }
+}

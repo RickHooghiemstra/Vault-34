@@ -1,0 +1,21 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-product",
+      "settings": {
+        "show_dynamic_checkout": true
+      }
+    },
+    "related": {
+      "type": "featured-collection",
+      "settings": {
+        "label": "You Might Also Like",
+        "title": "Related Products",
+        "product_limit": 4,
+        "columns": "4",
+        "bg": "elevated"
+      }
+    }
+  },
+  "order": ["main", "related"]
+}

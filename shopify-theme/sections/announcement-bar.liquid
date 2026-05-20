@@ -1,0 +1,176 @@
+{%- comment -%}
+  ANNOUNCEMENT BAR
+  Supports multiple rotating messages with optional link.
+  Settings: messages (1–4), background tint, close button.
+{%- endcomment -%}
+
+{%- if section.blocks.size > 0 -%}
+<div
+  class="announcement-bar{% if section.blocks.size > 1 %} announcement-bar--rotating{% endif %}"
+  {% if section.blocks.size > 1 %}data-rotates="true"{% endif %}
+  role="region"
+  aria-label="Announcements"
+>
+  <div class="announcement-bar__inner">
+    {%- for block in section.blocks -%}
+      {%- if block.type == 'message' -%}
+        <div
+          class="announcement-bar__message"
+          data-announcement-message
+          {% if forloop.first == false %}style="display:none"{% endif %}
+          {{ block.shopify_attributes }}
+        >
+          {%- if block.settings.url != blank -%}
+            <a href="{{ block.settings.url }}" class="announcement-bar__link">
+          {%- endif -%}
+
+          <span class="announcement-bar__text">
+            {%- if block.settings.icon != blank -%}
+              <span class="announcement-bar__icon">{{ block.settings.icon }}</span>
+            {%- else -%}
+              <span class="announcement-bar__dot"></span>
+            {%- endif -%}
+            {{ block.settings.text }}
+            {%- if block.settings.cta != blank -%}
+              <span class="announcement-bar__cta">{{ block.settings.cta }} →</span>
+            {%- endif -%}
+          </span>
+
+          {%- if block.settings.url != blank -%}
+            </a>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+
+  {%- if section.settings.show_close -%}
+    <button class="announcement-bar__close" aria-label="Close announcement"
+            onclick="this.closest('.announcement-bar').remove();document.documentElement.style.setProperty('--announcement-height','0px')">
+      <svg width="12" height="12" fill="none">
+        <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  {%- endif -%}
+</div>
+
+<style>
+.announcement-bar {
+  position: relative;
+  background: linear-gradient(90deg, var(--purple-900), var(--purple-700), var(--purple-900));
+  height: var(--announcement-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.announcement-bar::before {
+  content:'';
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0,rgba(255,255,255,.03) 1px,transparent 1px,transparent 80px);
+  pointer-events:none;
+}
+.announcement-bar__inner {
+  position:relative;z-index:1;
+  display:flex;align-items:center;justify-content:center;
+  width:100%;
+}
+.announcement-bar__message {
+  display:flex;align-items:center;justify-content:center;
+  width:100%;
+}
+.announcement-bar__link {
+  display:flex;align-items:center;gap:var(--space-2);
+  text-decoration:none;
+}
+.announcement-bar__text {
+  font-size:var(--text-xs);
+  font-weight:var(--font-semibold);
+  letter-spacing:var(--tracking-wider);
+  text-transform:uppercase;
+  color:var(--purple-100);
+  display:flex;align-items:center;gap:var(--space-3);
+}
+.announcement-bar__icon {
+  font-size:1em;
+}
+.announcement-bar__dot {
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--purple-300);
+  animation:pulse 2s ease-in-out infinite;
+}
+.announcement-bar__cta {
+  color:var(--purple-50);
+  text-decoration:underline;
+  text-decoration-color:rgba(237,233,254,.4);
+  text-underline-offset:2px;
+}
+.announcement-bar__close {
+  position:absolute;right:var(--space-4);top:50%;transform:translateY(-50%);
+  width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.6);
+  border-radius:var(--radius-sm);
+  transition:var(--transition-fast);
+  background:transparent;border:none;cursor:pointer;
+}
+.announcement-bar__close:hover { color:#fff;background:rgba(255,255,255,.1); }
+</style>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Announcement Bar",
+  "limit": 1,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_close",
+      "label": "Show close button",
+      "default": true
+    }
+  ],
+  "blocks": [
+    {
+      "type": "message",
+      "name": "Message",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Message",
+          "default": "🔥 Free worldwide shipping on orders over $199"
+        },
+        {
+          "type": "text",
+          "id": "cta",
+          "label": "CTA text (optional)",
+          "default": "Shop Now"
+        },
+        {
+          "type": "url",
+          "id": "url",
+          "label": "Link (optional)"
+        },
+        {
+          "type": "text",
+          "id": "icon",
+          "label": "Emoji icon (optional)"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Announcement Bar",
+      "blocks": [
+        { "type": "message", "settings": { "text": "🔥 Free worldwide shipping on orders over $199", "cta": "Shop Now" }},
+        { "type": "message", "settings": { "text": "🏍️ Exhaust systems for 500+ bike models", "cta": "Find Your Fit" }},
+        { "type": "message", "settings": { "text": "⚡ Express dispatch — orders before 2pm ship same day", "cta": "Learn More" }}
+      ]
+    }
+  ]
+}
+{% endschema %}

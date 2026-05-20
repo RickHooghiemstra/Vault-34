@@ -1,0 +1,244 @@
+{%- comment -%}
+  FITMENT FINDER SECTION
+  Can be embedded in homepage or as a standalone page section.
+  Cascading dropdowns: Make → Model → Year → Search.
+{%- endcomment -%}
+
+<section class="section-sm" style="background:{{ section.settings.bg_style == 'dark' ? 'var(--bg-base)' : 'var(--bg-elevated)' }}">
+  <div class="container">
+    <div class="fitment-bar reveal" data-fitment-bar>
+
+      <!-- Header row -->
+      <div class="fitment-bar__label">
+        <div class="fitment-bar__label-icon" aria-hidden="true">
+          <svg width="18" height="18" fill="none">
+            <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M9 5v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="h4" style="margin-bottom:var(--space-1)">
+            {{ section.settings.title | default: 'Find Parts for Your Bike' }}
+          </h2>
+          <p style="font-size:var(--text-sm);color:var(--text-subtle)">
+            {{ section.settings.subtitle | default: 'Select your make, model and year to see exactly what fits.' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Selectors -->
+      <div class="fitment-bar__selects">
+
+        <!-- Make -->
+        <div class="fitment-select-group">
+          <label class="form-label" for="fitment-make">Make</label>
+          <select
+            id="fitment-make"
+            class="form-select"
+            data-fitment-make
+            aria-label="Select motorcycle make"
+          >
+            <option value="">Select Make</option>
+          </select>
+        </div>
+
+        <!-- Model (disabled until Make selected) -->
+        <div class="fitment-select-group">
+          <label class="form-label" for="fitment-model">Model</label>
+          <select
+            id="fitment-model"
+            class="form-select"
+            data-fitment-model
+            disabled
+            aria-label="Select motorcycle model"
+          >
+            <option value="">Select Model</option>
+          </select>
+        </div>
+
+        <!-- Year (disabled until Model selected) -->
+        <div class="fitment-select-group">
+          <label class="form-label" for="fitment-year">Year</label>
+          <select
+            id="fitment-year"
+            class="form-select"
+            data-fitment-year
+            disabled
+            aria-label="Select motorcycle year"
+          >
+            <option value="">Select Year</option>
+          </select>
+        </div>
+
+        <!-- Submit -->
+        <div class="fitment-select-group" style="align-self:flex-end">
+          <button
+            class="btn btn-primary btn-full"
+            data-fitment-submit
+            aria-label="Search compatible products"
+            style="height:48px"
+          >
+            <svg width="16" height="16" fill="none" aria-hidden="true">
+              <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Find Parts
+          </button>
+        </div>
+
+      </div><!-- /selects -->
+
+      <!-- Hint -->
+      <p class="fitment-hint">
+        {{ section.settings.hint | default: 'Compatible with 500+ bike models — updated weekly' }}
+      </p>
+
+      <!-- Recent searches (populated by JS from localStorage) -->
+      <div id="fitment-recent" style="display:none;margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--border-subtle)">
+        <p style="font-size:var(--text-xs);color:var(--text-subtle);letter-spacing:var(--tracking-wider);text-transform:uppercase;margin-bottom:var(--space-3)">Your Recent Bikes</p>
+        <div id="fitment-recent-list" style="display:flex;flex-wrap:wrap;gap:var(--space-2)"></div>
+      </div>
+
+    </div><!-- /fitment-bar -->
+  </div>
+</section>
+
+<!-- Fitment data — injected from Shopify tags/metafields or static JSON -->
+<script>
+(function() {
+  /* In production: replace this with actual fitment data sourced from
+     product tags (make_model_year format) aggregated server-side, or
+     a metaobject/metafield JSON endpoint.
+     Structure: { "Make": { "Model": [year1, year2, ...] } }
+  */
+  window.vault34FitmentData = window.vault34FitmentData || {
+    "Yamaha": {
+      "MT-07": [2021,2022,2023,2024,2025],
+      "MT-09": [2021,2022,2023,2024,2025],
+      "R1": [2020,2021,2022,2023,2024,2025],
+      "R6": [2017,2018,2019,2020]
+    },
+    "Honda": {
+      "CBR600RR": [2019,2020,2021,2022,2023,2024],
+      "CBR1000RR-R": [2020,2021,2022,2023,2024,2025],
+      "CB650R": [2019,2020,2021,2022,2023,2024]
+    },
+    "Kawasaki": {
+      "ZX-6R": [2019,2020,2021,2022,2023,2024],
+      "ZX-10R": [2020,2021,2022,2023,2024,2025],
+      "Z900": [2020,2021,2022,2023,2024]
+    },
+    "Ducati": {
+      "Panigale V4": [2020,2021,2022,2023,2024,2025],
+      "Monster 937": [2021,2022,2023,2024],
+      "StreetFighter V4": [2020,2021,2022,2023,2024]
+    },
+    "BMW": {
+      "S1000RR": [2020,2021,2022,2023,2024,2025],
+      "M1000RR": [2021,2022,2023,2024,2025],
+      "S1000R": [2021,2022,2023,2024]
+    },
+    "Suzuki": {
+      "GSX-R600": [2011,2017,2018,2019,2020,2021],
+      "GSX-R1000": [2017,2018,2019,2020,2021,2022]
+    },
+    "KTM": {
+      "Duke 790": [2018,2019,2020,2021,2022,2023],
+      "RC 390": [2022,2023,2024,2025],
+      "1290 Super Duke R": [2020,2021,2022,2023,2024]
+    },
+    "Triumph": {
+      "Street Triple R": [2020,2021,2022,2023,2024],
+      "Speed Triple 1200": [2021,2022,2023,2024],
+      "Daytona Moto2 765": [2020,2021]
+    },
+    "MV Agusta": {
+      "Brutale 1000": [2020,2021,2022,2023,2024],
+      "F4": [2015,2016,2017,2018]
+    },
+    "Aprilia": {
+      "RSV4": [2020,2021,2022,2023,2024,2025],
+      "RS 660": [2021,2022,2023,2024],
+      "Tuono V4": [2020,2021,2022,2023,2024]
+    }
+  };
+
+  // Recent bikes from localStorage
+  var recent = [];
+  try { recent = JSON.parse(localStorage.getItem('vault34_recent_bikes') || '[]'); } catch {}
+
+  if (recent.length) {
+    var recentEl   = document.getElementById('fitment-recent');
+    var recentList = document.getElementById('fitment-recent-list');
+    if (recentEl && recentList) {
+      recentEl.style.display = 'block';
+      recentList.innerHTML = recent.slice(0, 4).map(function(bike) {
+        var tag = (bike.make + '_' + bike.model + '_' + bike.year).toLowerCase().replace(/\s+/g, '_');
+        return '<a href="/collections/all?filter.p.tag=' + encodeURIComponent(tag) + '" class="filter-chip" style="font-size:var(--text-xs)">' +
+          bike.year + ' ' + bike.make + ' ' + bike.model +
+          '</a>';
+      }).join('');
+    }
+  }
+
+  // Save selection to localStorage when submitting
+  var submitBtn = document.querySelector('[data-fitment-submit]');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', function() {
+      var make  = document.querySelector('[data-fitment-make]') && document.querySelector('[data-fitment-make]').value;
+      var model = document.querySelector('[data-fitment-model]') && document.querySelector('[data-fitment-model]').value;
+      var year  = document.querySelector('[data-fitment-year]') && document.querySelector('[data-fitment-year]').value;
+      if (make && model && year) {
+        try {
+          var saved = JSON.parse(localStorage.getItem('vault34_recent_bikes') || '[]');
+          var entry = { make: make, model: model, year: year };
+          saved = saved.filter(function(b) { return !(b.make===make && b.model===model && b.year===year); });
+          saved.unshift(entry);
+          localStorage.setItem('vault34_recent_bikes', JSON.stringify(saved.slice(0, 5)));
+        } catch {}
+      }
+    });
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Fitment Finder",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Find Parts for Your Bike"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "Select your make, model and year to see exactly what fits."
+    },
+    {
+      "type": "text",
+      "id": "hint",
+      "label": "Hint text",
+      "default": "Compatible with 500+ bike models — updated weekly"
+    },
+    {
+      "type": "select",
+      "id": "bg_style",
+      "label": "Background",
+      "options": [
+        { "value": "dark", "label": "Dark" },
+        { "value": "elevated", "label": "Elevated" }
+      ],
+      "default": "elevated"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Fitment Finder"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,158 @@
+{%- comment -%}
+  CART DRAWER SNIPPET
+  Slide-in from right. AJAX-driven item list, quantity controls, upsell, checkout CTA.
+{%- endcomment -%}
+
+<div
+  id="cart-drawer"
+  class="cart-drawer"
+  role="dialog"
+  aria-label="Shopping cart"
+  aria-modal="true"
+>
+
+  <!-- Header -->
+  <div class="cart-drawer__header">
+    <div class="cart-drawer__title">
+      <svg width="18" height="18" fill="none" aria-hidden="true">
+        <path d="M3 3h2.5l1.8 9H14M6.5 14.5a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0zm5 0a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Cart
+      <span class="cart-drawer__count">{{ cart.item_count }}</span>
+    </div>
+    <button
+      class="header-action-btn"
+      data-cart-close
+      aria-label="Close cart"
+    >
+      <svg width="16" height="16" fill="none" aria-hidden="true">
+        <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Items -->
+  <div class="cart-drawer__items">
+    {%- if cart.item_count == 0 -%}
+      <div style="text-align:center;padding:var(--space-16) var(--space-8);color:var(--text-subtle)">
+        <svg width="48" height="48" fill="none" style="margin:0 auto var(--space-4)" opacity=".3">
+          <path d="M6 6h8l4 20h22M18 38a3 3 0 106 0 3 3 0 00-6 0zm18 0a3 3 0 106 0 3 3 0 00-6 0z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p style="font-size:var(--text-base);font-weight:var(--font-semibold);color:var(--text-muted);margin-bottom:var(--space-2)">Your cart is empty</p>
+        <p style="font-size:var(--text-sm);color:var(--text-subtle);margin-bottom:var(--space-6)">Find your perfect exhaust system</p>
+        <a href="/collections/all" class="btn btn-primary" onclick="document.querySelector('.cart-drawer').classList.remove('is-open');document.querySelector('.cart-drawer__overlay').classList.remove('is-open');document.body.style.overflow=''">
+          Shop All Products
+        </a>
+      </div>
+    {%- else -%}
+      {%- for item in cart.items -%}
+        <div class="cart-item" data-key="{{ item.key }}">
+          <a href="{{ item.url }}">
+            <img
+              class="cart-item__image"
+              src="{{ item.image | image_url: width: 160 }}"
+              alt="{{ item.product.title | escape }}"
+              width="80" height="80"
+              loading="lazy"
+            >
+          </a>
+          <div>
+            <div class="cart-item__brand">{{ item.vendor }}</div>
+            <a href="{{ item.url }}" class="cart-item__title">{{ item.product.title }}</a>
+            {%- unless item.variant.title == 'Default Title' -%}
+              <div class="cart-item__variant">{{ item.variant.title }}</div>
+            {%- endunless -%}
+            {%- if item.properties != blank -%}
+              {%- for property in item.properties -%}
+                {%- unless property.last == blank -%}
+                  <div class="cart-item__variant">{{ property.first }}: {{ property.last }}</div>
+                {%- endunless -%}
+              {%- endfor -%}
+            {%- endif -%}
+            <div class="cart-item__qty">
+              <button class="cart-item__qty-btn" data-qty-change="-1" aria-label="Decrease quantity">
+                <svg width="10" height="10" fill="none"><path d="M1 5h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </button>
+              <span class="cart-item__qty-val">{{ item.quantity }}</span>
+              <button class="cart-item__qty-btn" data-qty-change="1" aria-label="Increase quantity">
+                <svg width="10" height="10" fill="none"><path d="M5 1v8M1 5h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="cart-item__price">
+            <span class="cart-item__price-value">{{ item.line_price | money }}</span>
+            {%- if item.line_price < item.original_line_price -%}
+              <span style="font-size:var(--text-xs);color:var(--text-subtle);text-decoration:line-through">{{ item.original_line_price | money }}</span>
+            {%- endif -%}
+            <button
+              class="btn btn-ghost"
+              style="font-size:var(--text-xs);padding:.2rem .4rem;color:var(--text-subtle)"
+              data-remove-key="{{ item.key }}"
+              aria-label="Remove {{ item.product.title }}"
+            >Remove</button>
+          </div>
+        </div>
+      {%- endfor -%}
+    {%- endif -%}
+  </div>
+
+  <!-- Footer -->
+  <div class="cart-drawer__footer">
+
+    {%- if settings.cart_upsell_message != blank -%}
+      <div class="cart-upsell">
+        <svg width="20" height="20" fill="none" style="color:var(--purple-300);flex-shrink:0">
+          <path d="M10 2l2.4 5 5.6.8-4 4 .9 5.5L10 15l-4.9 2.3.9-5.5-4-4 5.6-.8L10 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+        <div>
+          <div class="cart-upsell__label">Loyalty Offer</div>
+          <p style="font-size:var(--text-xs);color:var(--text-muted)">{{ settings.cart_upsell_message }}</p>
+        </div>
+      </div>
+    {%- endif -%}
+
+    <!-- Totals -->
+    <div class="cart-totals">
+      <div class="cart-total-row">
+        <span>Subtotal</span>
+        <span data-cart-total>{{ cart.total_price | money }}</span>
+      </div>
+      <div class="cart-total-row" style="font-size:var(--text-xs);color:var(--text-subtle)">
+        <span>Shipping calculated at checkout</span>
+      </div>
+      <div class="cart-total-row cart-total-row--grand">
+        <span>Total</span>
+        <span data-cart-total>{{ cart.total_price | money }}</span>
+      </div>
+    </div>
+
+    <!-- CTAs -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+      <a href="{{ routes.checkout_url }}" class="btn btn-primary btn-full btn-lg">
+        <svg width="16" height="16" fill="none" aria-hidden="true">
+          <path d="M6 3h7a1 1 0 011 1v7M9 14l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Secure Checkout
+      </a>
+      <a href="{{ routes.cart_url }}" class="btn btn-ghost btn-full">
+        View Full Cart
+      </a>
+    </div>
+
+    <!-- Trust signals -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:var(--space-5);margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--border-subtle)">
+      <div style="display:flex;align-items:center;gap:var(--space-1);font-size:var(--text-xs);color:var(--text-subtle)">
+        <svg width="12" height="12" fill="none"><rect x="2" y="5" width="8" height="6" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M4 5V4a2 2 0 014 0v1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Secure
+      </div>
+      <div style="display:flex;align-items:center;gap:var(--space-1);font-size:var(--text-xs);color:var(--text-subtle)">
+        <svg width="12" height="12" fill="none"><path d="M6 11s-4-2.7-4-6A4 4 0 016 1a4 4 0 014 4c0 3.3-4 6-4 6z" stroke="currentColor" stroke-width="1.3"/></svg>
+        Easy returns
+      </div>
+      <div style="display:flex;align-items:center;gap:var(--space-1);font-size:var(--text-xs);color:var(--text-subtle)">
+        <svg width="12" height="12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Guaranteed fit
+      </div>
+    </div>
+  </div>
+</div>

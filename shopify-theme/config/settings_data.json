@@ -1,0 +1,24 @@
+{
+  "current": {
+    "color_bg_base":         "#09090b",
+    "color_bg_elevated":     "#111113",
+    "color_purple_primary":  "#7c3aed",
+    "color_purple_light":    "#8b5cf6",
+    "color_text_primary":    "#fafafa",
+    "color_text_muted":      "#a1a1aa",
+    "tagline":               "Premium Exhaust & Performance",
+    "site_description":      "Premium motorcycle exhaust systems for performance riders. Slip-ons, full systems, carbon, titanium. Fits 500+ bike models.",
+    "footer_tagline":        "Premium exhaust systems for performance riders. Built for those who demand more.",
+    "show_account":          true,
+    "enable_customer_accounts": false,
+    "cart_type":             "drawer",
+    "cart_upsell_message":   "🔧 Add a heat shield for extra protection and extended warranty!",
+    "enable_page_loading":   true,
+    "enable_animations":     true
+  },
+  "presets": {
+    "Default": {
+      "color_purple_primary": "#7c3aed"
+    }
+  }
+}

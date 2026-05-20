@@ -1,0 +1,21 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-collection",
+      "settings": {
+        "products_per_page": 24,
+        "default_columns": "3"
+      }
+    },
+    "email": {
+      "type": "email-signup",
+      "settings": {
+        "label": "Exclusive Rider Community",
+        "title": "Get Early Access to New Drops",
+        "subtitle": "New exhausts, limited runs, and rider guides — direct to your inbox.",
+        "show_incentives": true
+      }
+    }
+  },
+  "order": ["main", "email"]
+}

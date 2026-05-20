@@ -1,0 +1,148 @@
+{%- comment -%}
+  STICKY ATC BAR
+  Appears when main ATC scrolls out of view.
+  Usage: render 'sticky-atc', product: product
+{%- endcomment -%}
+
+{%- liquid
+  assign current_variant = product.selected_or_first_available_variant
+-%}
+
+<div
+  class="sticky-atc"
+  id="sticky-atc"
+  aria-hidden="true"
+  aria-label="Add {{ product.title }} to cart"
+>
+  <div class="sticky-atc__inner">
+
+    <!-- Product info -->
+    <div class="sticky-atc__product">
+      {%- if product.featured_image -%}
+        <img
+          class="sticky-atc__image"
+          src="{{ product.featured_image | image_url: width: 96 }}"
+          alt="{{ product.featured_image.alt | escape }}"
+          width="48" height="48"
+          loading="lazy"
+        >
+      {%- endif -%}
+      <div>
+        <div class="sticky-atc__title">{{ product.title }}</div>
+        <div class="sticky-atc__price" data-sticky-price>{{ current_variant.price | money }}</div>
+      </div>
+    </div>
+
+    <!-- Variant selector (compact) -->
+    {%- unless product.has_only_default_variant -%}
+      <select
+        class="form-select"
+        style="max-width:200px;height:44px;font-size:var(--text-sm)"
+        id="sticky-variant-select"
+        aria-label="Select variant"
+      >
+        {%- for variant in product.variants -%}
+          <option
+            value="{{ variant.id }}"
+            {% if variant == current_variant %}selected{% endif %}
+            {% unless variant.available %}disabled{% endunless %}
+          >
+            {{ variant.title }}
+            {%- unless variant.available %} — Sold Out{% endunless %}
+          </option>
+        {%- endfor -%}
+      </select>
+    {%- endunless -%}
+
+    <!-- Actions -->
+    <div class="sticky-atc__actions">
+      <button
+        class="btn btn-primary btn-lg"
+        id="sticky-atc-btn"
+        data-default-text="{{ current_variant.available | ternary: 'Add to Cart', 'Sold Out' }}"
+        {%- unless current_variant.available -%}disabled{%- endunless -%}
+      >
+        <svg width="16" height="16" fill="none" aria-hidden="true">
+          <path d="M3 3h2.5l1.8 9H14M6.5 14.5a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0zm5 0a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Add to Cart
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var stickyBar = document.getElementById('sticky-atc');
+  var trigger   = document.querySelector('[data-sticky-atc-trigger]');
+  var stickyBtn = document.getElementById('sticky-atc-btn');
+  var varSelect = document.getElementById('sticky-variant-select');
+  var mainHidden = document.querySelector('input[name="id"]');
+
+  if (!stickyBar || !trigger) return;
+
+  // Show/hide on scroll
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      var visible = !entry.isIntersecting;
+      stickyBar.classList.toggle('is-visible', visible);
+      stickyBar.setAttribute('aria-hidden', !visible);
+    });
+  }, { rootMargin: '-80px 0px 0px 0px' });
+  observer.observe(trigger);
+
+  // Sync variant select → main hidden input
+  if (varSelect && mainHidden) {
+    varSelect.addEventListener('change', function() {
+      mainHidden.value = varSelect.value;
+      // Update price display
+      var priceEl = document.querySelector('[data-sticky-price]');
+      var selectedOpt = varSelect.options[varSelect.selectedIndex];
+      // Find variant price from variants JSON
+      try {
+        var variants = JSON.parse(document.querySelector('[data-variants-json]').textContent);
+        var match = variants.find(function(v) { return v.id == parseInt(varSelect.value); });
+        if (match && priceEl) {
+          priceEl.textContent = new Intl.NumberFormat('en-US', {style:'currency',currency:'USD'}).format(match.price/100);
+        }
+        if (match && stickyBtn) {
+          stickyBtn.disabled = !match.available;
+          stickyBtn.textContent = match.available ? 'Add to Cart' : 'Sold Out';
+        }
+      } catch {}
+    });
+  }
+
+  // Sticky ATC button → add to cart
+  if (stickyBtn) {
+    stickyBtn.addEventListener('click', function() {
+      var id = (varSelect && varSelect.value) || (mainHidden && mainHidden.value);
+      if (!id) return;
+
+      stickyBtn.classList.add('is-loading');
+      stickyBtn.disabled = true;
+
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: parseInt(id), quantity: 1 })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(item) {
+        document.dispatchEvent(new CustomEvent('cart:add', { detail: item }));
+        stickyBtn.textContent = 'Added!';
+        stickyBtn.classList.remove('is-loading');
+        setTimeout(function() {
+          stickyBtn.textContent = 'Add to Cart';
+          stickyBtn.disabled = false;
+        }, 1800);
+      })
+      .catch(function() {
+        stickyBtn.textContent = 'Error';
+        stickyBtn.classList.remove('is-loading');
+        stickyBtn.disabled = false;
+      });
+    });
+  }
+})();
+</script>

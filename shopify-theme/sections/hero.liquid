@@ -1,0 +1,284 @@
+{%- comment -%}
+  HOMEPAGE HERO
+  Full-viewport hero with:
+    - Background image/video with overlay
+    - Tech grid overlay
+    - Animated headline + sub + CTAs
+    - Stats bar
+    - Scroll indicator
+{%- endcomment -%}
+
+<section class="hero" aria-label="Hero">
+
+  <!-- Background -->
+  <div class="hero__bg">
+    {%- if section.settings.video_url != blank -%}
+      <video
+        class="hero__bg-image"
+        src="{{ section.settings.video_url }}"
+        autoplay muted loop playsinline
+        aria-hidden="true"
+        style="opacity:{{ section.settings.media_opacity | divided_by: 100.0 }}"
+      ></video>
+    {%- elsif section.settings.bg_image != blank -%}
+      <img
+        class="hero__bg-image"
+        src="{{ section.settings.bg_image | image_url: width: 2000 }}"
+        srcset="
+          {{ section.settings.bg_image | image_url: width: 800 }} 800w,
+          {{ section.settings.bg_image | image_url: width: 1200 }} 1200w,
+          {{ section.settings.bg_image | image_url: width: 2000 }} 2000w
+        "
+        sizes="100vw"
+        alt="{{ section.settings.bg_image.alt | escape }}"
+        fetchpriority="high"
+        loading="eager"
+        style="opacity:{{ section.settings.media_opacity | divided_by: 100.0 }}"
+      >
+    {%- else -%}
+      <!-- Placeholder gradient background -->
+      <div style="width:100%;height:100%;background:radial-gradient(ellipse 80% 60% at 60% 40%, rgba(76,29,149,.5) 0%, rgba(9,9,11,1) 70%)"></div>
+    {%- endif -%}
+
+    <!-- Gradient overlay -->
+    <div class="hero__bg-gradient"></div>
+
+    <!-- Tech grid -->
+    <div class="hero__grid-overlay" aria-hidden="true"></div>
+  </div>
+
+  <!-- Content -->
+  <div class="hero__content">
+
+    <!-- Label -->
+    <div class="hero__label">
+      <span class="hero__label-line"></span>
+      <span class="label">
+        {{- section.settings.label | default: 'Performance Exhaust Systems' -}}
+      </span>
+    </div>
+
+    <!-- Headline -->
+    <h1 class="hero__headline">
+      {%- assign headline_parts = section.settings.headline | split: '|' -%}
+      {%- for part in headline_parts -%}
+        {%- if forloop.last and headline_parts.size > 1 -%}
+          <span class="hero__headline-accent">{{ part | strip }}</span>
+        {%- else -%}
+          {{- part | strip }}
+          {%- unless forloop.last -%}<br>{%- endunless -%}
+        {%- endif -%}
+      {%- endfor -%}
+    </h1>
+
+    <!-- Sub-headline -->
+    {%- if section.settings.subheadline != blank -%}
+      <p class="hero__sub">{{ section.settings.subheadline }}</p>
+    {%- endif -%}
+
+    <!-- CTAs -->
+    <div class="hero__actions">
+      {%- if section.settings.cta_primary_label != blank -%}
+        <a
+          href="{{ section.settings.cta_primary_url | default: '/collections/all' }}"
+          class="btn btn-primary btn-xl"
+        >
+          {{ section.settings.cta_primary_label }}
+          <svg width="16" height="16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      {%- endif -%}
+
+      {%- if section.settings.cta_secondary_label != blank -%}
+        <a
+          href="{{ section.settings.cta_secondary_url | default: '/pages/fitment-finder' }}"
+          class="btn btn-secondary btn-xl"
+        >
+          <svg width="16" height="16" fill="none" aria-hidden="true">
+            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          {{ section.settings.cta_secondary_label }}
+        </a>
+      {%- endif -%}
+
+      {%- if section.settings.show_sound_preview -%}
+        <button
+          class="btn btn-ghost"
+          style="gap:var(--space-2);color:var(--text-muted)"
+          data-sound-play
+          data-sound-src="{{ section.settings.preview_audio | file_url }}"
+          aria-label="Play exhaust sound preview"
+        >
+          <div style="width:36px;height:36px;border:1px solid var(--border-purple);border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--purple-fill)">
+            <svg width="14" height="14" fill="none" data-icon-play>
+              <path d="M5 3l7 4-7 4V3z" fill="currentColor"/>
+            </svg>
+            <svg width="14" height="14" fill="none" data-icon-pause style="display:none">
+              <rect x="3" y="3" width="3" height="8" rx="1" fill="currentColor"/>
+              <rect x="8" y="3" width="3" height="8" rx="1" fill="currentColor"/>
+            </svg>
+          </div>
+          Hear the sound
+        </button>
+      {%- endif -%}
+    </div>
+
+    <!-- Stats -->
+    {%- if section.blocks.size > 0 -%}
+      <div class="hero__stats">
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'stat' -%}
+            <div class="hero__stat" {{ block.shopify_attributes }}>
+              <div class="hero__stat-value">{{ block.settings.value }}</div>
+              <div class="hero__stat-label">{{ block.settings.label }}</div>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+
+  </div><!-- /content -->
+
+  <!-- Scroll indicator -->
+  {%- if section.settings.show_scroll -%}
+    <div class="hero__scroll" aria-hidden="true">
+      <span style="font-size:var(--text-xs);letter-spacing:var(--tracking-wider);text-transform:uppercase;opacity:.5">Scroll</span>
+      <div class="hero__scroll-line"></div>
+    </div>
+  {%- endif -%}
+
+</section>
+
+{% schema %}
+{
+  "name": "Hero",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Eyebrow label",
+      "default": "Performance Exhaust Systems"
+    },
+    {
+      "type": "textarea",
+      "id": "headline",
+      "label": "Headline (use | to split accent line)",
+      "default": "Engineered for\nEvery Ride.|Louder. Lighter. Faster."
+    },
+    {
+      "type": "textarea",
+      "id": "subheadline",
+      "label": "Sub-headline",
+      "default": "Premium performance exhaust systems, slip-ons, and full kits for over 500 motorcycle models. Built for enthusiasts who demand more."
+    },
+    {
+      "type": "header",
+      "content": "CTAs"
+    },
+    {
+      "type": "text",
+      "id": "cta_primary_label",
+      "label": "Primary CTA label",
+      "default": "Shop Exhausts"
+    },
+    {
+      "type": "url",
+      "id": "cta_primary_url",
+      "label": "Primary CTA link"
+    },
+    {
+      "type": "text",
+      "id": "cta_secondary_label",
+      "label": "Secondary CTA label",
+      "default": "Find My Fit"
+    },
+    {
+      "type": "url",
+      "id": "cta_secondary_url",
+      "label": "Secondary CTA link"
+    },
+    {
+      "type": "header",
+      "content": "Media"
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": "Background image"
+    },
+    {
+      "type": "text",
+      "id": "video_url",
+      "label": "Background video URL (overrides image)"
+    },
+    {
+      "type": "range",
+      "id": "media_opacity",
+      "label": "Media opacity",
+      "min": 10,
+      "max": 80,
+      "step": 5,
+      "default": 35,
+      "unit": "%"
+    },
+    {
+      "type": "header",
+      "content": "Sound Preview"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sound_preview",
+      "label": "Show sound preview button",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Options"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_scroll",
+      "label": "Show scroll indicator",
+      "default": true
+    }
+  ],
+  "blocks": [
+    {
+      "type": "stat",
+      "name": "Stat",
+      "limit": 4,
+      "settings": [
+        {
+          "type": "text",
+          "id": "value",
+          "label": "Value",
+          "default": "500+"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Bike Models"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero",
+      "blocks": [
+        { "type": "stat", "settings": { "value": "500+", "label": "Bike Models" }},
+        { "type": "stat", "settings": { "value": "15k+", "label": "Happy Riders" }},
+        { "type": "stat", "settings": { "value": "4.9★", "label": "Average Rating" }},
+        { "type": "stat", "settings": { "value": "10yr", "label": "Warranty" }}
+      ]
+    }
+  ]
+}
+{% endschema %}

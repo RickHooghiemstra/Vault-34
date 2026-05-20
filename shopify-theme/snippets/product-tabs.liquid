@@ -1,0 +1,168 @@
+{%- comment -%}
+  PRODUCT TABS SNIPPET
+  Description | Specifications | Fitment | Shipping
+{%- endcomment -%}
+
+<div class="product-tabs" data-tabs>
+
+  <!-- Tab buttons -->
+  <div class="sound-tabs" role="tablist" aria-label="Product details" style="border-bottom:1px solid var(--border-subtle);margin-bottom:var(--space-8)">
+    <button class="sound-tab is-active" role="tab" aria-selected="true" aria-controls="tab-description" data-tab="description">
+      Description
+    </button>
+    <button class="sound-tab" role="tab" aria-selected="false" aria-controls="tab-specs" data-tab="specs">
+      Specifications
+    </button>
+    <button class="sound-tab" role="tab" aria-selected="false" aria-controls="tab-fitment" data-tab="fitment">
+      Fitment
+    </button>
+    <button class="sound-tab" role="tab" aria-selected="false" aria-controls="tab-shipping" data-tab="shipping">
+      Shipping & Returns
+    </button>
+  </div>
+
+  <!-- Tab panels -->
+  <div id="tab-description" role="tabpanel" class="tab-panel">
+    <div class="product-description" style="max-width:720px">
+      {{ product.description }}
+    </div>
+  </div>
+
+  <div id="tab-specs" role="tabpanel" class="tab-panel" style="display:none">
+    {%- if product.metafields.specs != blank -%}
+      <div class="tech-specs" style="max-width:600px">
+        <div class="tech-specs__header">
+          <div class="tech-specs__title">
+            <div class="tech-specs__icon" aria-hidden="true">⚙</div>
+            Technical Specifications
+          </div>
+        </div>
+        <div class="tech-specs__table">
+          {%- for spec in product.metafields.specs -%}
+            <div class="tech-specs__row">
+              <div class="tech-specs__key">{{ spec.key }}</div>
+              <div class="tech-specs__value">{{ spec.value }}</div>
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
+    {%- else -%}
+      <p style="color:var(--text-subtle);font-size:var(--text-sm)">Detailed specifications available soon.</p>
+    {%- endif -%}
+  </div>
+
+  <div id="tab-fitment" role="tabpanel" class="tab-panel" style="display:none">
+    <div style="max-width:600px">
+      {%- assign fitment_tags = product.tags | join: ', ' -%}
+      {%- if fitment_tags contains '_' -%}
+        <p style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:var(--space-4)">This product fits the following motorcycles:</p>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-2)">
+          {%- for tag in product.tags -%}
+            {%- assign tag_parts = tag | split: '_' -%}
+            {%- if tag_parts.size >= 3 -%}
+              <span class="filter-chip is-active" style="font-size:var(--text-xs);cursor:default">
+                {{ tag_parts[2] }} {{ tag_parts[0] | capitalize }} {{ tag_parts[1] | replace: '-', ' ' | capitalize }}
+              </span>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+        <p style="font-size:var(--text-xs);color:var(--text-subtle);margin-top:var(--space-4)">
+          Not sure if this fits your bike?
+          <a href="/pages/fitment-finder" style="color:var(--purple-300)">Use our fitment finder →</a>
+        </p>
+      {%- else -%}
+        <p style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:var(--space-4)">
+          This is a universal fit product. Please verify compatibility with your specific model.
+          <a href="/pages/fitment-finder" style="color:var(--purple-300)">Check fitment →</a>
+        </p>
+      {%- endif -%}
+    </div>
+  </div>
+
+  <div id="tab-shipping" role="tabpanel" class="tab-panel" style="display:none">
+    <div style="max-width:600px;display:flex;flex-direction:column;gap:var(--space-5)">
+      <div class="card-surface" style="padding:var(--space-4)">
+        <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2)">
+          <div class="trust-item__icon" aria-hidden="true">
+            <svg width="16" height="16" fill="none"><path d="M2 9h8V5H2v4zm8 0l3 2H2m9-2h2l2 2v2h-2M10 15a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM5 15a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h4 class="h6" style="text-transform:none;letter-spacing:0">Shipping</h4>
+        </div>
+        <ul style="font-size:var(--text-sm);color:var(--text-muted);display:flex;flex-direction:column;gap:var(--space-2)">
+          <li style="display:flex;align-items:center;gap:var(--space-2)">
+            <svg width="12" height="12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--color-success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Free shipping on orders over €199
+          </li>
+          <li style="display:flex;align-items:center;gap:var(--space-2)">
+            <svg width="12" height="12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--color-success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Express delivery 1–3 business days (Europe)
+          </li>
+          <li style="display:flex;align-items:center;gap:var(--space-2)">
+            <svg width="12" height="12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--color-success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Same-day dispatch for orders before 2pm CET
+          </li>
+          <li style="display:flex;align-items:center;gap:var(--space-2)">
+            <svg width="12" height="12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--color-success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Worldwide shipping available
+          </li>
+        </ul>
+      </div>
+      <div class="card-surface" style="padding:var(--space-4)">
+        <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2)">
+          <div class="trust-item__icon" aria-hidden="true">
+            <svg width="16" height="16" fill="none"><path d="M4 8a4 4 0 108 0 4 4 0 00-8 0zM7 4V2M7 10v2M3.5 4.5l1 1M9.5 9.5l1 1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <h4 class="h6" style="text-transform:none;letter-spacing:0">Returns</h4>
+        </div>
+        <ul style="font-size:var(--text-sm);color:var(--text-muted);display:flex;flex-direction:column;gap:var(--space-2)">
+          <li style="display:flex;align-items:center;gap:var(--space-2)">
+            <svg width="12" height="12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--color-success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            30-day returns on unused items
+          </li>
+          <li style="display:flex;align-items:center;gap:var(--space-2)">
+            <svg width="12" height="12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--color-success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Free return shipping (EU orders)
+          </li>
+          <li style="display:flex;align-items:center;gap:var(--space-2)">
+            <svg width="12" height="12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--color-success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            10-year manufacturer warranty included
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+.product-description h1,.product-description h2,.product-description h3 { color:var(--text-primary);margin-block:var(--space-4) var(--space-3); }
+.product-description p { color:var(--text-muted);line-height:var(--leading-relaxed);margin-bottom:var(--space-4); }
+.product-description ul,.product-description ol { color:var(--text-muted);padding-left:var(--space-5);margin-bottom:var(--space-4); }
+.product-description li { margin-bottom:var(--space-2); }
+.product-description img { border-radius:var(--radius-xl);margin-block:var(--space-6); }
+.product-description table { width:100%;border-collapse:collapse;margin-block:var(--space-6); }
+.product-description td,.product-description th { padding:var(--space-3) var(--space-4);border:1px solid var(--border-subtle);font-size:var(--text-sm); }
+.product-description th { background:var(--bg-elevated);font-weight:var(--font-semibold);color:var(--text-muted);letter-spacing:var(--tracking-wide);text-transform:uppercase;font-size:var(--text-xs); }
+</style>
+
+<script>
+document.querySelectorAll('.product-tabs [data-tab]').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    var targetId = 'tab-' + tab.dataset.tab;
+
+    document.querySelectorAll('.product-tabs .sound-tab').forEach(function(t) {
+      t.classList.remove('is-active');
+      t.setAttribute('aria-selected', 'false');
+    });
+    document.querySelectorAll('.product-tabs .tab-panel').forEach(function(p) {
+      p.style.display = 'none';
+    });
+
+    tab.classList.add('is-active');
+    tab.setAttribute('aria-selected', 'true');
+
+    var panel = document.getElementById(targetId);
+    if (panel) panel.style.display = 'block';
+  });
+});
+</script>

@@ -1,0 +1,183 @@
+{%- comment -%}
+  PRODUCT CARD SNIPPET
+  Usage: render 'product-card', product: product, index: forloop.index
+  Features: dual image hover, badges, quick-add, rating, fitment tag.
+{%- endcomment -%}
+
+{%- liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign has_image_alt   = product.images.size > 1
+  assign is_sale         = current_variant.compare_at_price > current_variant.price
+  assign is_new          = product.tags contains 'new'
+  assign is_oos          = product.available == false
+  assign discount_pct    = 0
+  if is_sale
+    assign discount_pct = current_variant.compare_at_price | minus: current_variant.price | times: 100 | divided_by: current_variant.compare_at_price
+  endif
+  assign stagger = index | modulo: 4 | plus: 1
+-%}
+
+<article
+  class="product-card card-hover reveal"
+  data-stagger="{{ stagger }}"
+  itemscope
+  itemtype="https://schema.org/Product"
+>
+
+  <!-- Media -->
+  <div class="product-card__media">
+    <a href="{{ product.url | within: collection }}" tabindex="-1" aria-hidden="true">
+      {%- if product.featured_image != blank -%}
+        <img
+          class="product-card__image"
+          src="{{ product.featured_image | image_url: width: 600 }}"
+          srcset="
+            {{ product.featured_image | image_url: width: 400 }} 400w,
+            {{ product.featured_image | image_url: width: 600 }} 600w,
+            {{ product.featured_image | image_url: width: 800 }} 800w
+          "
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          alt="{{ product.featured_image.alt | escape | default: product.title }}"
+          width="600" height="450"
+          loading="lazy"
+          itemprop="image"
+        >
+        {%- if has_image_alt -%}
+          <img
+            class="product-card__image-alt"
+            src="{{ product.images[1] | image_url: width: 600 }}"
+            alt="{{ product.images[1].alt | escape | default: product.title }}"
+            width="600" height="450"
+            loading="lazy"
+            aria-hidden="true"
+          >
+        {%- endif -%}
+      {%- else -%}
+        <div style="width:100%;height:100%;background:var(--bg-muted);display:flex;align-items:center;justify-content:center">
+          <svg width="40" height="40" fill="none" style="opacity:.2">
+            <rect x="4" y="4" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+            <circle cx="15" cy="17" r="4" stroke="currentColor" stroke-width="2"/>
+            <path d="M4 28l8-8 7 7 5-5 10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      {%- endif -%}
+    </a>
+
+    <!-- Badges -->
+    <div class="product-card__badges">
+      {%- if is_oos -%}
+        <span class="badge badge-out-of-stock">Sold Out</span>
+      {%- elsif is_sale and discount_pct >= 5 -%}
+        <span class="badge badge-sale">-{{ discount_pct }}%</span>
+      {%- endif -%}
+      {%- if is_new -%}
+        <span class="badge badge-new">New</span>
+      {%- endif -%}
+      {%- if product.tags contains 'bestseller' -%}
+        <span class="badge badge-purple">Best Seller</span>
+      {%- endif -%}
+      {%- if product.tags contains 'race-series' -%}
+        <span class="badge badge-purple">Race Series</span>
+      {%- endif -%}
+    </div>
+
+    <!-- Quick actions -->
+    <div class="product-card__actions">
+      {%- unless is_oos -%}
+        <button
+          class="btn btn-primary btn-sm"
+          style="flex:1;backdrop-filter:blur(8px)"
+          data-quick-add="{{ current_variant.id }}"
+          aria-label="Quick add {{ product.title }} to cart"
+        >
+          <svg width="14" height="14" fill="none" aria-hidden="true">
+            <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Add to Cart
+        </button>
+      {%- endunless -%}
+      <a
+        href="{{ product.url | within: collection }}"
+        class="btn btn-secondary btn-icon"
+        style="backdrop-filter:blur(8px)"
+        aria-label="View {{ product.title }}"
+      >
+        <svg width="14" height="14" fill="none">
+          <path d="M7 3C4 3 2 7 2 7s2 4 5 4 5-4 5-4-2-4-5-4z" stroke="currentColor" stroke-width="1.3"/>
+          <circle cx="7" cy="7" r="1.5" fill="currentColor"/>
+        </svg>
+      </a>
+    </div>
+
+  </div><!-- /media -->
+
+  <!-- Body -->
+  <div class="product-card__body">
+
+    <!-- Brand / Vendor -->
+    {%- if product.vendor != blank -%}
+      <p class="product-card__brand" itemprop="brand">{{ product.vendor }}</p>
+    {%- endif -%}
+
+    <!-- Title -->
+    <h3 class="product-card__title" itemprop="name">
+      <a href="{{ product.url | within: collection }}" style="color:inherit;text-decoration:none">
+        {{ product.title }}
+      </a>
+    </h3>
+
+    <!-- Fitment tag pill -->
+    {%- assign fitment_tag = product.tags | join: ' ' -%}
+    {%- if fitment_tag contains 'yamaha' or fitment_tag contains 'honda' or fitment_tag contains 'kawasaki' or fitment_tag contains 'ducati' -%}
+      {%- assign make_tag = '' -%}
+      {%- for tag in product.tags -%}
+        {%- assign low_tag = tag | downcase -%}
+        {%- if low_tag contains 'yamaha' or low_tag contains 'honda' or low_tag contains 'kawasaki' or low_tag contains 'ducati' or low_tag contains 'bmw' or low_tag contains 'ktm' or low_tag contains 'triumph' or low_tag contains 'suzuki' -%}
+          {%- assign make_tag = tag -%}
+          {%- break -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if make_tag != blank -%}
+        <p class="product-card__fitment">
+          <svg width="10" height="10" fill="none" style="display:inline;margin-right:4px">
+            <path d="M2 5h6M5 2l3 3-3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Fits: {{ make_tag | replace: '_', ' ' | capitalize }}
+        </p>
+      {%- endif -%}
+    {%- endif -%}
+
+    <!-- Footer: price + rating -->
+    <div class="product-card__footer">
+      <div class="product-card__price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+        <meta itemprop="priceCurrency" content="{{ cart.currency.iso_code }}">
+        <span class="price-current" itemprop="price" content="{{ current_variant.price | divided_by: 100.0 }}">
+          {{ current_variant.price | money }}
+        </span>
+        {%- if is_sale -%}
+          <span class="price-compare">{{ current_variant.compare_at_price | money }}</span>
+          {%- if discount_pct >= 5 -%}
+            <span class="price-badge">-{{ discount_pct }}%</span>
+          {%- endif -%}
+        {%- endif -%}
+      </div>
+
+      <!-- Rating (from metafield or Shopify product reviews) -->
+      {%- assign rating = product.metafields.reviews.rating.value -%}
+      {%- assign count  = product.metafields.reviews.rating_count -%}
+      {%- if rating != blank -%}
+        <div class="product-card__rating">
+          <div class="stars" aria-label="{{ rating }} out of 5 stars">
+            {%- for i in (1..5) -%}
+              <span class="star">{% if i <= rating %}★{% else %}☆{% endif %}</span>
+            {%- endfor -%}
+          </div>
+          {%- if count != blank -%}
+            <span class="rating-count">({{ count }})</span>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+
+  </div><!-- /body -->
+</article>

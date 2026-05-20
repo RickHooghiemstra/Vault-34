@@ -1,0 +1,189 @@
+{%- comment -%}
+  SEARCH MODAL SNIPPET
+  Full-screen search overlay with live AJAX results.
+  Keyboard: Cmd/Ctrl+K to open, Esc to close.
+{%- endcomment -%}
+
+<div
+  id="search-modal"
+  class="search-modal"
+  role="dialog"
+  aria-label="Search products"
+  aria-modal="true"
+  aria-hidden="true"
+>
+  <div class="search-modal__backdrop" aria-hidden="true"></div>
+
+  <div class="search-modal__panel">
+
+    <!-- Search Input -->
+    <div class="search-modal__input-wrap">
+      <svg class="search-modal__icon" width="20" height="20" fill="none" aria-hidden="true">
+        <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M13.5 13.5L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <input
+        class="search-modal__input"
+        type="text"
+        placeholder="Search exhausts, brands, models…"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        aria-label="Search"
+        data-search-input
+      >
+      <button
+        class="btn btn-ghost btn-icon-sm"
+        data-search-close
+        aria-label="Close search"
+        style="color:var(--text-subtle)"
+      >
+        <svg width="14" height="14" fill="none">
+          <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div class="search-modal__results" data-search-results aria-live="polite"></div>
+
+    <!-- Quick links (shown when no query) -->
+    <div class="search-modal__quick" data-search-quick>
+      <p style="font-size:var(--text-xs);font-weight:var(--font-semibold);letter-spacing:var(--tracking-wider);text-transform:uppercase;color:var(--text-subtle);padding:var(--space-4) var(--space-5) var(--space-2)">
+        Popular Searches
+      </p>
+      <div style="padding:0 var(--space-3) var(--space-3);display:flex;flex-wrap:wrap;gap:var(--space-2)">
+        {%- assign quick = 'Slip-On Exhaust,Full System,Carbon Fiber,Titanium,Heat Shield,Link Pipe' | split: ',' -%}
+        {%- for term in quick -%}
+          <a
+            href="/search?q={{ term | url_encode }}&type=product"
+            class="filter-chip"
+            style="font-size:var(--text-xs)"
+          >{{ term }}</a>
+        {%- endfor -%}
+      </div>
+    </div>
+
+    <!-- Footer shortcuts -->
+    <div class="search-modal__footer">
+      <div class="search-modal__shortcut">
+        <kbd class="kbd">↵</kbd> to open
+        <kbd class="kbd">↑↓</kbd> navigate
+        <kbd class="kbd">Esc</kbd> close
+      </div>
+      <div class="search-modal__shortcut">
+        <kbd class="kbd">⌘K</kbd> open search
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var modal      = document.getElementById('search-modal');
+  var input      = modal && modal.querySelector('.search-modal__input');
+  var resultsEl  = modal && modal.querySelector('[data-search-results]');
+  var quickEl    = modal && modal.querySelector('[data-search-quick]');
+  var timer      = null;
+  var isOpen     = false;
+
+  function openSearch() {
+    if (!modal) return;
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    isOpen = true;
+    setTimeout(function() { input && input.focus(); }, 60);
+    document.querySelectorAll('[data-search-open]').forEach(function(b) { b.setAttribute('aria-expanded', 'true'); });
+  }
+
+  function closeSearch() {
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    isOpen = false;
+    if (input) input.value = '';
+    if (resultsEl) resultsEl.innerHTML = '';
+    if (quickEl) quickEl.style.display = '';
+    document.querySelectorAll('[data-search-open]').forEach(function(b) { b.setAttribute('aria-expanded', 'false'); });
+  }
+
+  document.querySelectorAll('[data-search-open]').forEach(function(btn) {
+    btn.addEventListener('click', openSearch);
+  });
+
+  modal && modal.querySelector('[data-search-close]') &&
+    modal.querySelector('[data-search-close]').addEventListener('click', closeSearch);
+
+  modal && modal.querySelector('.search-modal__backdrop') &&
+    modal.querySelector('.search-modal__backdrop').addEventListener('click', closeSearch);
+
+  document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); isOpen ? closeSearch() : openSearch(); }
+    if (e.key === 'Escape' && isOpen) closeSearch();
+  });
+
+  if (input) {
+    input.addEventListener('input', function() {
+      var q = input.value.trim();
+      clearTimeout(timer);
+      if (!q) {
+        if (resultsEl) resultsEl.innerHTML = '';
+        if (quickEl) quickEl.style.display = '';
+        return;
+      }
+      if (quickEl) quickEl.style.display = 'none';
+      timer = setTimeout(function() { doSearch(q); }, 280);
+    });
+  }
+
+  function doSearch(q) {
+    if (!resultsEl) return;
+    resultsEl.innerHTML = '<div style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-2)">' +
+      Array(3).fill('<div class="skeleton" style="height:56px;border-radius:var(--radius-lg)"></div>').join('') +
+      '</div>';
+
+    fetch('/search/suggest.json?q=' + encodeURIComponent(q) + '&resources[type]=product&resources[limit]=7')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var products = (data.resources && data.resources.results && data.resources.results.products) || [];
+        renderResults(products, q);
+      })
+      .catch(function() {
+        resultsEl.innerHTML = '<p style="padding:var(--space-4);color:var(--text-subtle);font-size:var(--text-sm)">Search unavailable. <a href="/search?q=' + encodeURIComponent(q) + '" style="color:var(--purple-300)">Try full search →</a></p>';
+      });
+  }
+
+  function renderResults(products, q) {
+    if (!resultsEl) return;
+    if (!products.length) {
+      resultsEl.innerHTML = '<div style="padding:var(--space-6) var(--space-5);text-align:center">' +
+        '<p style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:var(--space-3)">No products found for "' + q + '"</p>' +
+        '<a href="/search?q=' + encodeURIComponent(q) + '&type=product" class="btn btn-secondary btn-sm">View all search results</a>' +
+        '</div>';
+      return;
+    }
+
+    var html = products.map(function(p) {
+      var price = p.price ? new Intl.NumberFormat('en-US', {style:'currency',currency:'USD'}).format(p.price/100) : '';
+      var img   = (p.featured_image && p.featured_image.url) ? p.featured_image.url : '';
+      return '<a href="' + p.url + '" class="search-result-item">' +
+        (img ? '<img class="search-result-item__image" src="' + img + '" alt="' + p.title + '" width="56" height="56" loading="lazy">' :
+          '<div class="search-result-item__image" style="background:var(--bg-muted);border-radius:var(--radius-md)"></div>') +
+        '<div>' +
+        '<div class="search-result-item__title">' + p.title + '</div>' +
+        '<div class="search-result-item__meta">' + price + '</div>' +
+        '</div>' +
+        '<svg width="14" height="14" fill="none" style="margin-left:auto;color:var(--text-subtle);flex-shrink:0"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</a>';
+    }).join('');
+
+    html += '<div style="padding:var(--space-3) var(--space-3) var(--space-2);border-top:1px solid var(--border-subtle)">' +
+      '<a href="/search?q=' + encodeURIComponent(q) + '&type=product" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;font-size:var(--text-xs)">View all results for "' + q + '"</a>' +
+      '</div>';
+
+    resultsEl.innerHTML = html;
+  }
+})();
+</script>

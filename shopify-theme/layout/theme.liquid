@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="{{ request.locale.iso_code }}" class="no-js">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  {%- if settings.favicon != blank -%}
+    <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32 }}">
+  {%- endif -%}
+
+  <title>
+    {%- if request.page_type == 'index' -%}
+      {{ shop.name }} — {{ settings.tagline | default: 'Premium Exhaust & Performance' }}
+    {%- elsif page_title -%}
+      {{ page_title }} | {{ shop.name }}
+    {%- else -%}
+      {{ shop.name }}
+    {%- endif -%}
+  </title>
+
+  {%- if page_description -%}
+    <meta name="description" content="{{ page_description | escape }}">
+  {%- elsif settings.site_description != blank -%}
+    <meta name="description" content="{{ settings.site_description | escape }}">
+  {%- endif -%}
+
+  {%- unless settings.enable_customer_accounts == false -%}
+    {%- if customer -%}
+      <meta name="robots" content="noindex">
+    {%- endif -%}
+  {%- endunless -%}
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="{{ shop.name }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ page_title | default: shop.name }}">
+  {%- if page_description -%}
+    <meta property="og:description" content="{{ page_description | escape }}">
+  {%- endif -%}
+  {%- if settings.share_image -%}
+    <meta property="og:image" content="{{ settings.share_image | image_url: width: 1200 }}">
+  {%- endif -%}
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page_title | default: shop.name }}">
+
+  <!-- Canonical -->
+  <link rel="canonical" href="{{ canonical_url }}">
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://cdn.shopify.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Google Fonts — Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Critical CSS -->
+  {{ 'theme.css' | asset_url | stylesheet_tag }}
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": {{ shop.name | json }},
+    "url": {{ shop.url | append: page.url | json }},
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {{ shop.url | append: "/search?q={search_term_string}" | json }},
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  {%- if request.page_type == 'product' -%}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": {{ product.title | json }},
+      "description": {{ product.description | strip_html | json }},
+      "brand": {
+        "@type": "Brand",
+        "name": {{ product.vendor | json }}
+      },
+      "image": {{ product.featured_image | image_url: width: 800 | json }},
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": {{ cart.currency.iso_code | json }},
+        "price": {{ product.price | money_without_currency | remove: ',' | json }},
+        "availability": "{{ product.available | ternary: 'https://schema.org/InStock', 'https://schema.org/OutOfStock' }}"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "{{ product.metafields.reviews.rating_count | default: 12 }}"
+      }
+    }
+    </script>
+  {%- endif -%}
+
+  {{ content_for_header }}
+
+  <!-- Shopify currency globals -->
+  <script>
+    window.Shopify = window.Shopify || {};
+    window.Shopify.currency = {
+      active: {{ cart.currency.iso_code | json }},
+      rate: {{ cart.currency.iso_code | json }}
+    };
+
+    window.vault34Config = {
+      shop: {{ shop.name | json }},
+      currency: {{ cart.currency.iso_code | json }},
+      cartUrl: {{ routes.cart_url | json }},
+      searchUrl: {{ routes.search_url | json }},
+      accountUrl: {{ routes.account_url | json }},
+      moneyFormat: {{ shop.money_format | json }},
+    };
+  </script>
+</head>
+
+<body class="template-{{ request.page_type }}{% if request.design_mode %} is-design-mode{% endif %}">
+
+  {%- if settings.enable_page_loading -%}
+    <div id="page-loader" aria-hidden="true" style="
+      position:fixed;top:0;left:0;right:0;height:2px;z-index:9999;
+      background:linear-gradient(90deg, var(--purple-500), var(--purple-300));
+      transform:scaleX(0);transform-origin:left;
+      transition:transform 0.3s ease;
+    "></div>
+  {%- endif -%}
+
+  <!-- Skip to content — accessibility -->
+  <a href="#main-content" class="sr-only" style="
+    position:fixed;top:var(--space-4);left:var(--space-4);z-index:10000;
+    background:var(--purple-primary);color:#fff;
+    padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);
+    transform:translateY(-200%);transition:transform 0.2s ease;
+  " onfocus="this.style.transform='translateY(0)'" onblur="this.style.transform='translateY(-200%)'">
+    Skip to content
+  </a>
+
+  <!-- Search Modal -->
+  {%- render 'search-modal' -%}
+
+  <!-- Cart Drawer Overlay -->
+  <div class="cart-drawer__overlay" aria-hidden="true"></div>
+
+  <!-- Cart Drawer -->
+  {%- render 'cart-drawer' -%}
+
+  <!-- Mobile Menu -->
+  {%- render 'mobile-menu' -%}
+
+  <!-- Site Header -->
+  {%- sections 'header-group' -%}
+  {%- section 'header' -%}
+
+  <!-- Main Content -->
+  <main id="main-content" tabindex="-1">
+    {{ content_for_layout }}
+  </main>
+
+  <!-- Site Footer -->
+  {%- section 'footer' -%}
+
+  <!-- Sticky ATC — only on product pages -->
+  {%- if request.page_type == 'product' -%}
+    {%- render 'sticky-atc', product: product -%}
+  {%- endif -%}
+
+  <!-- Theme JS -->
+  <script src="{{ 'theme.js' | asset_url }}" defer></script>
+
+  <script>
+    document.documentElement.classList.remove('no-js');
+    document.documentElement.classList.add('js');
+  </script>
+</body>
+</html>

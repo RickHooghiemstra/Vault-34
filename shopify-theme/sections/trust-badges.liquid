@@ -1,0 +1,98 @@
+{%- comment -%}
+  TRUST BADGES SECTION
+  Horizontal strip with icons, title, subtitle per trust signal.
+{%- endcomment -%}
+
+<div class="trust-strip reveal">
+  <div class="trust-strip__items">
+    {%- for block in section.blocks -%}
+      {%- if block.type == 'trust_item' -%}
+        <div class="trust-item" {{ block.shopify_attributes }}>
+          <div class="trust-item__icon" aria-hidden="true">
+            {%- case block.settings.icon -%}
+              {%- when 'shipping' -%}
+                <svg width="18" height="18" fill="none"><path d="M2 10h9V4H2v6zm9 0l3 3H2m10-3h2l3 3v3h-2M12 16a2 2 0 100-4 2 2 0 000 4zM6 16a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              {%- when 'returns' -%}
+                <svg width="18" height="18" fill="none"><path d="M4 8a5 5 0 100 4.5M4 8H1m3 0l2-2M4 8l2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              {%- when 'secure' -%}
+                <svg width="18" height="18" fill="none"><rect x="3" y="8" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M6 8V6a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="9" cy="12.5" r="1.5" fill="currentColor"/></svg>
+              {%- when 'warranty' -%}
+                <svg width="18" height="18" fill="none"><path d="M9 2l2 5h5l-4 3 2 5-5-3-5 3 2-5-4-3h5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+              {%- when 'support' -%}
+                <svg width="18" height="18" fill="none"><path d="M4 10V9a5 5 0 1110 0v1M4 10a2 2 0 000 4h.5c.3 0 .5-.2.5-.5v-3c0-.3-.2-.5-.5-.5H4zm10 0a2 2 0 010 4h-.5a.5.5 0 01-.5-.5v-3c0-.3.2-.5.5-.5H14z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              {%- when 'fitment' -%}
+                <svg width="18" height="18" fill="none"><path d="M9 2l2 5h5l-4 3 1.5 4.5-4.5-2.5-4.5 2.5L6 10 2 7h5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+              {%- else -%}
+                <svg width="18" height="18" fill="none"><path d="M5 9l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            {%- endcase -%}
+          </div>
+          <div>
+            <div class="trust-item__title">{{ block.settings.title }}</div>
+            {%- if block.settings.subtitle != blank -%}
+              <div class="trust-item__sub">{{ block.settings.subtitle }}</div>
+            {%- endif -%}
+          </div>
+        </div>
+        {%- unless forloop.last -%}
+          <div style="width:1px;height:32px;background:var(--border-subtle);flex-shrink:0" aria-hidden="true"></div>
+        {%- endunless -%}
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Trust Badges",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "trust_item",
+      "name": "Trust Item",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "Icon",
+          "options": [
+            { "value": "shipping",  "label": "Shipping" },
+            { "value": "returns",   "label": "Returns" },
+            { "value": "secure",    "label": "Secure" },
+            { "value": "warranty",  "label": "Warranty" },
+            { "value": "support",   "label": "Support" },
+            { "value": "fitment",   "label": "Fitment" },
+            { "value": "checkmark", "label": "Checkmark" }
+          ],
+          "default": "shipping"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Free Shipping"
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Subtitle",
+          "default": "On orders over €199"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Trust Badges",
+      "blocks": [
+        { "type": "trust_item", "settings": { "icon": "shipping", "title": "Free Shipping",     "subtitle": "On orders over €199" }},
+        { "type": "trust_item", "settings": { "icon": "fitment",  "title": "Guaranteed Fit",    "subtitle": "500+ bike models" }},
+        { "type": "trust_item", "settings": { "icon": "returns",  "title": "Easy Returns",      "subtitle": "30-day hassle-free" }},
+        { "type": "trust_item", "settings": { "icon": "warranty", "title": "10-Year Warranty",  "subtitle": "Industry-leading cover" }},
+        { "type": "trust_item", "settings": { "icon": "secure",   "title": "Secure Checkout",   "subtitle": "SSL encrypted" }},
+        { "type": "trust_item", "settings": { "icon": "support",  "title": "Expert Support",    "subtitle": "Mon–Fri, 9am–6pm" }}
+      ]
+    }
+  ]
+}
+{% endschema %}

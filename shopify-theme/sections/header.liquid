@@ -1,0 +1,168 @@
+{%- comment -%}
+  SITE HEADER
+  - Sticky with transparent-to-frosted-glass scroll transition
+  - Logo (image or text)
+  - Desktop mega-menu nav
+  - Search, account, cart action buttons
+  - Hamburger for mobile
+{%- endcomment -%}
+
+<header class="site-header site-header--transparent" role="banner">
+  <div class="site-header__inner">
+
+    <!-- Logo -->
+    <div class="site-header__logo-wrap">
+      <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }} home">
+        {%- if settings.logo != blank -%}
+          <img
+            src="{{ settings.logo | image_url: height: 40 }}"
+            alt="{{ shop.name }}"
+            width="{{ settings.logo.width }}"
+            height="40"
+            loading="eager"
+            fetchpriority="high"
+          >
+        {%- else -%}
+          <div class="site-header__logo-mark" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M9 2L15.5 6V12L9 16L2.5 12V6L9 2Z" fill="white" opacity=".9"/>
+              <path d="M9 5L13 7.5V12L9 14.5L5 12V7.5L9 5Z" fill="white" opacity=".3"/>
+            </svg>
+          </div>
+          <span>{{ shop.name | upcase }}</span>
+        {%- endif -%}
+      </a>
+    </div>
+
+    <!-- Desktop Nav -->
+    <nav class="site-header__nav lg:flex md:hidden sm:hidden" aria-label="Main navigation">
+      {%- for link in linklists[section.settings.menu].links -%}
+        {%- if link.links != blank -%}
+          <div class="nav-item" data-has-dropdown>
+            <button
+              class="nav-link"
+              aria-expanded="false"
+              aria-haspopup="true"
+            >
+              {{ link.title }}
+              <svg class="nav-link__chevron" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            {%- render 'mega-menu', link: link -%}
+          </div>
+        {%- else -%}
+          <div class="nav-item">
+            <a
+              href="{{ link.url }}"
+              class="nav-link{% if link.active %} is-active{% endif %}"
+            >
+              {{ link.title }}
+            </a>
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </nav>
+
+    <!-- Header Actions -->
+    <div class="site-header__actions">
+
+      <!-- Search -->
+      <button
+        class="header-action-btn"
+        data-search-open
+        aria-label="Open search"
+        aria-controls="search-modal"
+        aria-expanded="false"
+      >
+        <svg width="18" height="18" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M12.5 12.5L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <!-- Account -->
+      {%- if settings.show_account -%}
+        <a
+          href="{{ customer ? routes.account_url : routes.account_login_url }}"
+          class="header-action-btn md:flex sm:hidden"
+          aria-label="{{ customer ? 'My account' : 'Sign in' }}"
+        >
+          <svg width="18" height="18" fill="none" aria-hidden="true">
+            <circle cx="9" cy="6" r="3.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M2 17c0-3.5 3-6 7-6s7 2.5 7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </a>
+      {%- endif -%}
+
+      <!-- Cart -->
+      <button
+        class="header-action-btn"
+        data-cart-open
+        aria-label="Open cart — {{ cart.item_count }} items"
+        aria-controls="cart-drawer"
+        aria-expanded="false"
+      >
+        <svg width="18" height="18" fill="none" aria-hidden="true">
+          <path d="M3 3h2.5l1.8 9H14M6.5 14.5a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0zm5 0a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        {%- if cart.item_count > 0 -%}
+          <span class="header-action-btn__badge" data-cart-count>{{ cart.item_count }}</span>
+        {%- else -%}
+          <span class="header-action-btn__badge" data-cart-count style="display:none">0</span>
+        {%- endif -%}
+      </button>
+
+      <!-- Mobile hamburger -->
+      <button
+        class="header-action-btn lg:hidden"
+        data-mobile-menu-open
+        aria-label="Open menu"
+        aria-controls="mobile-menu"
+        aria-expanded="false"
+      >
+        <svg width="18" height="18" fill="none" aria-hidden="true">
+          <path d="M2 5h14M2 9h14M2 13h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div><!-- /actions -->
+  </div><!-- /inner -->
+</header>
+
+<style>
+/* Ensure nav is hidden on mobile — show lg+ */
+@media (max-width: 1023px) {
+  .site-header__nav { display: none !important; }
+}
+@media (min-width: 1024px) {
+  .lg\:hidden { display: none !important; }
+  .site-header__nav { display: flex !important; }
+}
+</style>
+
+{% schema %}
+{
+  "name": "Header",
+  "limit": 1,
+  "settings": [
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Main menu",
+      "default": "main-menu"
+    },
+    {
+      "type": "checkbox",
+      "id": "transparent_on_homepage",
+      "label": "Transparent on homepage",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_account",
+      "label": "Show account icon",
+      "default": true
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,172 @@
+{%- comment -%}
+  SITE FOOTER
+  4-column grid: brand info, nav columns, newsletter mini.
+{%- endcomment -%}
+
+<footer class="site-footer" role="contentinfo">
+  <div class="site-footer__grid">
+
+    <!-- Brand column -->
+    <div class="footer-brand">
+      <a href="{{ routes.root_url }}" class="site-header__logo" style="font-size:var(--text-xl)">
+        {%- if settings.logo != blank -%}
+          <img src="{{ settings.logo | image_url: height: 36 }}" alt="{{ shop.name }}" height="36" loading="lazy">
+        {%- else -%}
+          <div class="site-header__logo-mark">
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+              <path d="M9 2L15.5 6V12L9 16L2.5 12V6L9 2Z" fill="white"/>
+            </svg>
+          </div>
+          <span>{{ shop.name | upcase }}</span>
+        {%- endif -%}
+      </a>
+
+      <p class="footer-brand__tagline">
+        {{ settings.footer_tagline | default: 'Premium exhaust systems for performance riders. Built for those who demand more.' }}
+      </p>
+
+      <!-- Social links -->
+      <div class="footer-brand__social">
+        {%- if settings.social_instagram != blank -%}
+          <a href="{{ settings.social_instagram }}" class="social-link" target="_blank" rel="noopener" aria-label="Follow on Instagram">
+            <svg width="14" height="14" fill="none"><rect x="2" y="2" width="10" height="10" rx="3" stroke="currentColor" stroke-width="1.4"/><circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/><circle cx="10.5" cy="3.5" r=".5" fill="currentColor"/></svg>
+          </a>
+        {%- endif -%}
+        {%- if settings.social_youtube != blank -%}
+          <a href="{{ settings.social_youtube }}" class="social-link" target="_blank" rel="noopener" aria-label="Subscribe on YouTube">
+            <svg width="14" height="14" fill="none"><rect x="1" y="3" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M6 5.5l3 1.5-3 1.5V5.5z" fill="currentColor"/></svg>
+          </a>
+        {%- endif -%}
+        {%- if settings.social_facebook != blank -%}
+          <a href="{{ settings.social_facebook }}" class="social-link" target="_blank" rel="noopener" aria-label="Follow on Facebook">
+            <svg width="14" height="14" fill="none"><path d="M9 2H7a3 3 0 00-3 3v2H2v3h2v4h3V10h2l.5-3H7V5a1 1 0 011-1h1V2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        {%- endif -%}
+        {%- if settings.social_tiktok != blank -%}
+          <a href="{{ settings.social_tiktok }}" class="social-link" target="_blank" rel="noopener" aria-label="Follow on TikTok">TT</a>
+        {%- endif -%}
+      </div>
+
+      <!-- Certifications / trust marks -->
+      <div style="display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-5);flex-wrap:wrap">
+        <div style="border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);font-size:10px;color:var(--text-subtle);letter-spacing:var(--tracking-wider);text-transform:uppercase">ISO 9001</div>
+        <div style="border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);font-size:10px;color:var(--text-subtle);letter-spacing:var(--tracking-wider);text-transform:uppercase">SSL Secure</div>
+        <div style="border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);font-size:10px;color:var(--text-subtle);letter-spacing:var(--tracking-wider);text-transform:uppercase">10yr Warranty</div>
+      </div>
+    </div>
+
+    <!-- Nav columns from link lists -->
+    {%- for block in section.blocks -%}
+      {%- if block.type == 'nav_column' -%}
+        <div {{ block.shopify_attributes }}>
+          <h3 class="footer-nav__title">{{ block.settings.title }}</h3>
+          <ul class="footer-nav__list" role="list">
+            {%- for link in linklists[block.settings.menu].links -%}
+              <li>
+                <a href="{{ link.url }}" class="footer-nav__link">{{ link.title }}</a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- elsif block.type == 'contact' -%}
+        <div {{ block.shopify_attributes }}>
+          <h3 class="footer-nav__title">{{ block.settings.title | default: 'Contact' }}</h3>
+          <ul class="footer-nav__list" role="list">
+            {%- if block.settings.email != blank -%}
+              <li>
+                <a href="mailto:{{ block.settings.email }}" class="footer-nav__link">
+                  {{ block.settings.email }}
+                </a>
+              </li>
+            {%- endif -%}
+            {%- if block.settings.phone != blank -%}
+              <li>
+                <a href="tel:{{ block.settings.phone | remove: ' ' }}" class="footer-nav__link">
+                  {{ block.settings.phone }}
+                </a>
+              </li>
+            {%- endif -%}
+            {%- if block.settings.hours != blank -%}
+              <li>
+                <span class="footer-nav__link" style="cursor:default">{{ block.settings.hours }}</span>
+              </li>
+            {%- endif -%}
+            {%- if block.settings.address != blank -%}
+              <li>
+                <span class="footer-nav__link" style="cursor:default;white-space:pre-line">{{ block.settings.address }}</span>
+              </li>
+            {%- endif -%}
+          </ul>
+        </div>
+      {%- endif -%}
+    {%- endfor -%}
+
+  </div><!-- /grid -->
+
+  <!-- Bottom bar -->
+  <div class="site-footer__bottom">
+    <div class="site-footer__copyright">
+      &copy; {{ 'now' | date: '%Y' }} {{ shop.name }}. All rights reserved.
+    </div>
+
+    <!-- Payment icons -->
+    <div style="display:flex;align-items:center;gap:var(--space-2)" aria-label="Accepted payment methods">
+      {%- assign payment_methods = shop.enabled_payment_types -%}
+      {%- for type in payment_methods -%}
+        {{ type | payment_type_svg_tag: class: 'payment-icon' }}
+      {%- endfor -%}
+    </div>
+
+    <nav class="site-footer__legal" aria-label="Legal">
+      <a href="{{ routes.root_url }}pages/privacy-policy">Privacy</a>
+      <a href="{{ routes.root_url }}pages/terms-of-service">Terms</a>
+      <a href="{{ routes.root_url }}pages/shipping-policy">Shipping</a>
+      <a href="{{ routes.root_url }}pages/refund-policy">Returns</a>
+    </nav>
+  </div>
+
+</footer>
+
+<style>
+.payment-icon { height: 22px; border-radius: 3px; }
+</style>
+
+{% schema %}
+{
+  "name": "Footer",
+  "limit": 1,
+  "blocks": [
+    {
+      "type": "nav_column",
+      "name": "Navigation Column",
+      "limit": 3,
+      "settings": [
+        { "type": "text", "id": "title", "label": "Column title", "default": "Shop" },
+        { "type": "link_list", "id": "menu", "label": "Menu" }
+      ]
+    },
+    {
+      "type": "contact",
+      "name": "Contact Info",
+      "limit": 1,
+      "settings": [
+        { "type": "text", "id": "title", "label": "Title", "default": "Contact" },
+        { "type": "text", "id": "email", "label": "Email" },
+        { "type": "text", "id": "phone", "label": "Phone" },
+        { "type": "text", "id": "hours", "label": "Hours", "default": "Mon–Fri, 9am–6pm CET" },
+        { "type": "textarea", "id": "address", "label": "Address" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Footer",
+      "blocks": [
+        { "type": "nav_column", "settings": { "title": "Products", "menu": "footer-products" }},
+        { "type": "nav_column", "settings": { "title": "Support", "menu": "footer-support" }},
+        { "type": "contact",    "settings": { "title": "Contact Us", "email": "support@vault34.com" }}
+      ]
+    }
+  ]
+}
+{% endschema %}
