@@ -1,10 +1,16 @@
 {%- comment -%}
   FITMENT FINDER SECTION
-  Can be embedded in homepage or as a standalone page section.
   Cascading dropdowns: Make → Model → Year → Search.
+  Data is built from real product tags: MAKE_*, MODEL_*, YEAR_*
 {%- endcomment -%}
 
-<section class="section-sm" style="background:{{ section.settings.bg_style == 'dark' ? 'var(--bg-base)' : 'var(--bg-elevated)' }}">
+{%- if section.settings.bg_style == 'dark' -%}
+  {%- assign section_bg = 'var(--bg-base)' -%}
+{%- else -%}
+  {%- assign section_bg = 'var(--bg-elevated)' -%}
+{%- endif -%}
+
+<section class="section-sm" style="background:{{ section_bg }}">
   <div class="container">
     <div class="fitment-bar reveal" data-fitment-bar>
 
@@ -103,69 +109,179 @@
   </div>
 </section>
 
-<!-- Fitment data — injected from Shopify tags/metafields or static JSON -->
 <script>
 (function() {
-  /* In production: replace this with actual fitment data sourced from
-     product tags (make_model_year format) aggregated server-side, or
-     a metaobject/metafield JSON endpoint.
-     Structure: { "Make": { "Model": [year1, year2, ...] } }
-  */
+  // Real fitment data built from product tags (MAKE_*, MODEL_*, YEAR_*)
+  // Keys match tag values exactly so URLs resolve correctly:
+  // /collections/all/MAKE_{make}+MODEL_{model}+YEAR_{year}
   window.vault34FitmentData = window.vault34FitmentData || {
     "Yamaha": {
-      "MT-07": [2021,2022,2023,2024,2025],
-      "MT-09": [2021,2022,2023,2024,2025],
-      "R1": [2020,2021,2022,2023,2024,2025],
-      "R6": [2017,2018,2019,2020]
+      "MT_07":    [2021,2022,2023,2024],
+      "MT_09":    [2021,2022,2023],
+      "MT_10":    [2022],
+      "MT_03":    [2022],
+      "XSR_125":  [2021,2022,2023,2024,2025],
+      "XSR_700":  [2021,2022,2023,2024],
+      "XSR_900":  [2022,2023,2024],
+      "R3":       [2022],
+      "YZF_R7":   [2021,2022],
+      "Tracer_9": [2021,2022,2023,2024],
+      "Tracer_7": [2020,2021,2022,2023],
+      "TMAX_560": [2020,2021,2022,2023,2024],
+      "XMAX_125": [2021,2022,2023,2024]
     },
     "Honda": {
-      "CBR600RR": [2019,2020,2021,2022,2023,2024],
-      "CBR1000RR-R": [2020,2021,2022,2023,2024,2025],
-      "CB650R": [2019,2020,2021,2022,2023,2024]
-    },
-    "Kawasaki": {
-      "ZX-6R": [2019,2020,2021,2022,2023,2024],
-      "ZX-10R": [2020,2021,2022,2023,2024,2025],
-      "Z900": [2020,2021,2022,2023,2024]
-    },
-    "Ducati": {
-      "Panigale V4": [2020,2021,2022,2023,2024,2025],
-      "Monster 937": [2021,2022,2023,2024],
-      "StreetFighter V4": [2020,2021,2022,2023,2024]
+      "CB_125":   [2021,2022,2023,2024],
+      "NC_750":   [2021,2022,2023],
+      "Forza_750":[2021,2022,2023],
+      "CMX_1100": [2021,2022,2023,2024],
+      "CRF_300":  [2021,2022],
+      "CRF_450":  [2021],
+      "CRF_250":  [2022,2023],
+      "MSX_125":  [2021,2022],
+      "SH_350":   [2021,2022,2023]
     },
     "BMW": {
-      "S1000RR": [2020,2021,2022,2023,2024,2025],
-      "M1000RR": [2021,2022,2023,2024,2025],
-      "S1000R": [2021,2022,2023,2024]
+      "S1000R":       [2021,2022,2023],
+      "R_1300":       [2024,2025,2026],
+      "F_900":        [2020,2021,2022,2023,2024],
+      "G310R_G310GS": [2017,2018,2019,2020,2021,2022,2023]
     },
-    "Suzuki": {
-      "GSX-R600": [2011,2017,2018,2019,2020,2021],
-      "GSX-R1000": [2017,2018,2019,2020,2021,2022]
+    "Kawasaki": {
+      "Ninja_ZX_10R": [2021,2022],
+      "ZX_10_R":      [2016,2017,2018,2019,2020,2021,2022],
+      "Z900":         [2025]
     },
-    "KTM": {
-      "Duke 790": [2018,2019,2020,2021,2022,2023],
-      "RC 390": [2022,2023,2024,2025],
-      "1290 Super Duke R": [2020,2021,2022,2023,2024]
-    },
-    "Triumph": {
-      "Street Triple R": [2020,2021,2022,2023,2024],
-      "Speed Triple 1200": [2021,2022,2023,2024],
-      "Daytona Moto2 765": [2020,2021]
-    },
-    "MV Agusta": {
-      "Brutale 1000": [2020,2021,2022,2023,2024],
-      "F4": [2015,2016,2017,2018]
+    "Ducati": {
+      "Panigale_V2":     [2020,2021,2022],
+      "HYPERMOTARD_950": [2021,2022,2023],
+      "SCRAMBLER_1100":  [2021],
+      "Scrambler_Urban": [2021,2022]
     },
     "Aprilia": {
-      "RSV4": [2020,2021,2022,2023,2024,2025],
-      "RS 660": [2021,2022,2023,2024],
-      "Tuono V4": [2020,2021,2022,2023,2024]
+      "RSV4":      [2021,2022,2023,2024],
+      "Tuono_660": [2021,2022,2023],
+      "TUAREG_660":[2022],
+      "RX":        [2021,2022]
+    },
+    "KTM": {
+      "125_Duke":      [2021,2022],
+      "Duke_390":      [2021,2022],
+      "390_Adventure": [2020,2021,2022],
+      "1290_Superduke":[2020,2021,2022,2023]
+    },
+    "Triumph": {
+      "Trident_660":  [2021,2022,2023,2024],
+      "SPEED_TRIPLE": [2021,2022,2023],
+      "Tiger_900":    [2020,2021,2022],
+      "TIGER_660":    [2022,2023,2024,2025]
+    },
+    "Suzuki": {
+      "SV650":     [2016,2017,2018,2019,2020,2021,2022,2023,2024],
+      "GSX_R_600": [2004,2005]
+    },
+    "Harley_Davidson": {
+      "Pan_America": [2021,2022,2023,2024]
+    },
+    "Moto_Guzzi": {
+      "V85_TT": [2019,2020,2021,2022,2023]
+    },
+    "Vespa": {
+      "GTS_300":   [2021,2022,2023],
+      "GTS_125":   [2021,2022,2023],
+      "GTS_310":   [2024]
+    },
+    "Husqvarna": {
+      "Svartpilen": [2021,2022,2023]
+    },
+    "Kymco": {
+      "AK_550": [2021,2022,2023,2024]
+    },
+    "CFMoto": {
+      "450MT": [2024]
     }
   };
 
+  function toDisplay(key) {
+    return key.replace(/_/g, ' ');
+  }
+
+  var data    = window.vault34FitmentData;
+  var makeEl  = document.querySelector('[data-fitment-make]');
+  var modelEl = document.querySelector('[data-fitment-model]');
+  var yearEl  = document.querySelector('[data-fitment-year]');
+  var submitEl= document.querySelector('[data-fitment-submit]');
+
+  if (!makeEl) return;
+
+  // Populate makes
+  Object.keys(data).sort().forEach(function(make) {
+    var opt = document.createElement('option');
+    opt.value = make;
+    opt.textContent = toDisplay(make);
+    makeEl.appendChild(opt);
+  });
+
+  makeEl.addEventListener('change', function() {
+    var make = makeEl.value;
+    modelEl.innerHTML = '<option value="">Select Model</option>';
+    yearEl.innerHTML  = '<option value="">Select Year</option>';
+    modelEl.disabled  = true;
+    yearEl.disabled   = true;
+
+    if (make && data[make]) {
+      Object.keys(data[make]).sort().forEach(function(model) {
+        var opt = document.createElement('option');
+        opt.value = model;
+        opt.textContent = toDisplay(model);
+        modelEl.appendChild(opt);
+      });
+      modelEl.disabled = false;
+    }
+  });
+
+  modelEl.addEventListener('change', function() {
+    var make  = makeEl.value;
+    var model = modelEl.value;
+    yearEl.innerHTML = '<option value="">Select Year</option>';
+    yearEl.disabled  = true;
+
+    if (make && model && data[make] && data[make][model]) {
+      var years = data[make][model].slice().sort(function(a,b){ return b - a; });
+      years.forEach(function(yr) {
+        var opt = document.createElement('option');
+        opt.value = yr;
+        opt.textContent = yr;
+        yearEl.appendChild(opt);
+      });
+      yearEl.disabled = false;
+    }
+  });
+
+  submitEl && submitEl.addEventListener('click', function() {
+    var make  = makeEl.value;
+    var model = modelEl.value;
+    var year  = yearEl.value;
+    if (!make || !model || !year) return;
+
+    // Save to recent bikes
+    try {
+      var saved = JSON.parse(localStorage.getItem('vault34_recent_bikes') || '[]');
+      var entry = { make: make, model: model, year: year };
+      saved = saved.filter(function(b) {
+        return !(b.make === make && b.model === model && b.year === year);
+      });
+      saved.unshift(entry);
+      localStorage.setItem('vault34_recent_bikes', JSON.stringify(saved.slice(0, 5)));
+    } catch(e) {}
+
+    // Navigate to filtered collection using Shopify tag URL format
+    window.location.href = '/collections/all/MAKE_' + make + '+MODEL_' + model + '+YEAR_' + year;
+  });
+
   // Recent bikes from localStorage
   var recent = [];
-  try { recent = JSON.parse(localStorage.getItem('vault34_recent_bikes') || '[]'); } catch {}
+  try { recent = JSON.parse(localStorage.getItem('vault34_recent_bikes') || '[]'); } catch(e) {}
 
   if (recent.length) {
     var recentEl   = document.getElementById('fitment-recent');
@@ -173,31 +289,12 @@
     if (recentEl && recentList) {
       recentEl.style.display = 'block';
       recentList.innerHTML = recent.slice(0, 4).map(function(bike) {
-        var tag = (bike.make + '_' + bike.model + '_' + bike.year).toLowerCase().replace(/\s+/g, '_');
-        return '<a href="/collections/all?filter.p.tag=' + encodeURIComponent(tag) + '" class="filter-chip" style="font-size:var(--text-xs)">' +
-          bike.year + ' ' + bike.make + ' ' + bike.model +
+        var url = '/collections/all/MAKE_' + bike.make + '+MODEL_' + bike.model + '+YEAR_' + bike.year;
+        return '<a href="' + url + '" class="filter-chip" style="font-size:var(--text-xs)">' +
+          bike.year + ' ' + toDisplay(bike.make) + ' ' + toDisplay(bike.model) +
           '</a>';
       }).join('');
     }
-  }
-
-  // Save selection to localStorage when submitting
-  var submitBtn = document.querySelector('[data-fitment-submit]');
-  if (submitBtn) {
-    submitBtn.addEventListener('click', function() {
-      var make  = document.querySelector('[data-fitment-make]') && document.querySelector('[data-fitment-make]').value;
-      var model = document.querySelector('[data-fitment-model]') && document.querySelector('[data-fitment-model]').value;
-      var year  = document.querySelector('[data-fitment-year]') && document.querySelector('[data-fitment-year]').value;
-      if (make && model && year) {
-        try {
-          var saved = JSON.parse(localStorage.getItem('vault34_recent_bikes') || '[]');
-          var entry = { make: make, model: model, year: year };
-          saved = saved.filter(function(b) { return !(b.make===make && b.model===model && b.year===year); });
-          saved.unshift(entry);
-          localStorage.setItem('vault34_recent_bikes', JSON.stringify(saved.slice(0, 5)));
-        } catch {}
-      }
-    });
   }
 })();
 </script>
