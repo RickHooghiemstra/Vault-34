@@ -166,7 +166,7 @@
         </div>
 
         <!-- Stock status -->
-        <p data-variant-stock style="font-size:var(--text-sm);color:{{ current_variant.available ? 'var(--color-success)' : 'var(--text-subtle)' }}">
+        <p data-variant-stock style="font-size:var(--text-sm);color:{%- if current_variant.available -%}var(--color-success){%- else -%}var(--text-subtle){%- endif -%}">
           {%- if current_variant.available -%}
             ● In Stock
             {%- if current_variant.inventory_quantity > 0 and current_variant.inventory_quantity < 5 -%}

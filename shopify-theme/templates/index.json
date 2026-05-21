@@ -6,7 +6,7 @@
         "msg1": {
           "type": "message",
           "settings": {
-            "text": "ð Worldwide shipping â rates shown at checkout",
+            "text": "🚚 Worldwide shipping — rates shown at checkout",
             "cta": "Shop Now",
             "url": "/collections/all"
           }
@@ -22,7 +22,7 @@
         "msg3": {
           "type": "message",
           "settings": {
-            "text": "ð¦ Orders shipped fast from the Netherlands"
+            "text": "📦 Orders shipped fast from the Netherlands"
           }
         }
       },
@@ -68,7 +68,7 @@
       "settings": {
         "label": "Performance Exhaust Specialist",
         "headline": "Premium Exhausts for|Every Ride.",
-        "subheadline": "We curate the best performance exhaust systems from top brands like Akrapovic, Arrow, and Mivv â slip-ons, full systems, and more for over 500 motorcycle models.",
+        "subheadline": "We curate the best performance exhaust systems from top brands like Akrapovic, Arrow, and Mivv — slip-ons, full systems, and more for over 500 motorcycle models.",
         "cta_primary_label": "Shop Exhausts",
         "cta_primary_url": "/collections/all",
         "cta_secondary_label": "Find My Fit",
@@ -135,7 +135,7 @@
       "settings": {
         "title": "Find Parts for Your Bike",
         "subtitle": "Select your make, model and year to see exactly what fits.",
-        "hint": "Compatible with 500+ bike models â updated regularly",
+        "hint": "Compatible with 500+ bike models — updated regularly",
         "bg_style": "elevated"
       }
     },
@@ -213,7 +213,7 @@
       "settings": {
         "label": "Sound Demo",
         "title": "Hear the Difference",
-        "subtitle": "Compare how each configuration changes your exhaust note â from stock to full race spec. Exact specs vary per product."
+        "subtitle": "Compare how each configuration changes your exhaust note — from stock to full race spec. Exact specs vary per product."
       }
     },
     "brand_story": {
@@ -249,7 +249,7 @@
       "settings": {
         "label": "Our Story",
         "title": "A Family Business\nPassionate About Bikes",
-        "body": "<p>We're a small, family-run shop with one goal: helping riders find the right exhaust for their bike. We don't manufacture anything ourselves â instead, we carefully select and stock only the best brands so you get quality you can trust.</p>",
+        "body": "<p>We're a small, family-run shop with one goal: helping riders find the right exhaust for their bike. We don't manufacture anything ourselves — instead, we carefully select and stock only the best brands so you get quality you can trust.</p>",
         "body2": "<p>Whether you're after a subtle slip-on for daily riding or a full race system for track days, we'll help you find the right fit. Honest advice, no fluff.</p>",
         "badge_label": "Our Selection",
         "badge_text": "Akrapovic, Arrow, Mivv, LeoVince & more.",
@@ -264,7 +264,7 @@
       "settings": {
         "label": "Stay in the Loop",
         "title": "New Arrivals & Exclusive Deals",
-        "subtitle": "Be the first to hear about new exhausts, brand drops, and special offers â straight to your inbox.",
+        "subtitle": "Be the first to hear about new exhausts, brand drops, and special offers — straight to your inbox.",
         "cta": "Get Updates",
         "show_incentives": true
       }
@@ -298,7 +298,7 @@
           "settings": {
             "title": "Contact Us",
             "email": "support@vault34.com",
-            "hours": "MonâFri, 9amâ5pm CET"
+            "hours": "Mon–Fri, 9am–5pm CET"
           }
         }
       },
