@@ -41,6 +41,17 @@
   </div>
 </div>
 
+<style>
+@media (max-width: 767px) {
+  .trust-strip__items {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-5);
+  }
+  .trust-strip__items > [aria-hidden="true"] { display: none; }
+}
+</style>
+
 {% schema %}
 {
   "name": "Trust Badges",
