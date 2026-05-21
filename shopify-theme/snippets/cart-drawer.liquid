@@ -113,16 +113,13 @@
 
     <!-- Totals -->
     <div class="cart-totals">
-      <div class="cart-total-row">
+      <div class="cart-total-row cart-total-row--grand">
         <span>Subtotal</span>
         <span data-cart-total>{{ cart.total_price | money }}</span>
       </div>
       <div class="cart-total-row" style="font-size:var(--text-xs);color:var(--text-subtle)">
-        <span>Shipping calculated at checkout</span>
-      </div>
-      <div class="cart-total-row cart-total-row--grand">
-        <span>Total</span>
-        <span data-cart-total>{{ cart.total_price | money }}</span>
+        <svg width="10" height="10" fill="none" style="flex-shrink:0"><circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="1.2"/><path d="M5 3v2.5L6.5 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Shipping &amp; taxes calculated at checkout
       </div>
     </div>
 

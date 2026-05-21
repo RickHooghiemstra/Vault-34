@@ -91,24 +91,37 @@
   }, { rootMargin: '-80px 0px 0px 0px' });
   observer.observe(trigger);
 
+  function formatMoney(cents) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: (window.Shopify && window.Shopify.currency && window.Shopify.currency.active) || 'USD'
+    }).format(cents / 100);
+  }
+
+  function applyVariant(variant) {
+    if (!variant) return;
+    if (mainHidden) mainHidden.value = variant.id;
+    if (varSelect) varSelect.value = variant.id;
+    var priceEl = document.querySelector('[data-sticky-price]');
+    if (priceEl) priceEl.textContent = formatMoney(variant.price);
+    if (stickyBtn) {
+      stickyBtn.disabled = !variant.available;
+      stickyBtn.textContent = variant.available ? 'Add to Cart' : 'Sold Out';
+    }
+  }
+
+  // Sync when main product form changes variant
+  document.addEventListener('variant:change', function(e) {
+    applyVariant(e.detail);
+  });
+
   // Sync variant select → main hidden input
   if (varSelect && mainHidden) {
     varSelect.addEventListener('change', function() {
-      mainHidden.value = varSelect.value;
-      // Update price display
-      var priceEl = document.querySelector('[data-sticky-price]');
-      var selectedOpt = varSelect.options[varSelect.selectedIndex];
-      // Find variant price from variants JSON
       try {
         var variants = JSON.parse(document.querySelector('[data-variants-json]').textContent);
         var match = variants.find(function(v) { return v.id == parseInt(varSelect.value); });
-        if (match && priceEl) {
-          priceEl.textContent = new Intl.NumberFormat('en-US', {style:'currency',currency:'USD'}).format(match.price/100);
-        }
-        if (match && stickyBtn) {
-          stickyBtn.disabled = !match.available;
-          stickyBtn.textContent = match.available ? 'Add to Cart' : 'Sold Out';
-        }
+        applyVariant(match);
       } catch {}
     });
   }

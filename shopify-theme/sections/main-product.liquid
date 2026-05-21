@@ -187,6 +187,26 @@
           <span>Fits your <span id="fitment-match-bike"></span></span>
         </div>
 
+        <!-- Trust micro-signals — near ATC for maximum visibility -->
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);padding:var(--space-3) 0">
+          <div class="trust-item" style="gap:var(--space-2)">
+            <svg width="14" height="14" fill="none"><path d="M2 7l3.5 3.5 6.5-6" stroke="var(--purple-300)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span style="font-size:var(--text-xs)">Fitment guaranteed</span>
+          </div>
+          <div class="trust-item" style="gap:var(--space-2)">
+            <svg width="14" height="14" fill="none"><rect x="3" y="6" width="8" height="6" rx="1" stroke="var(--purple-300)" stroke-width="1.3"/><path d="M5 6V5a2 2 0 014 0v1" stroke="var(--purple-300)" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <span style="font-size:var(--text-xs)">Secure checkout</span>
+          </div>
+          <div class="trust-item" style="gap:var(--space-2)">
+            <svg width="14" height="14" fill="none"><path d="M2 9h8V5H2v4zm8 0l3 2H2m9-2h2l2 2v2h-2M10 14a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM5 14a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" stroke="var(--purple-300)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span style="font-size:var(--text-xs)">Worldwide shipping</span>
+          </div>
+          <div class="trust-item" style="gap:var(--space-2)">
+            <svg width="14" height="14" fill="none"><path d="M4 8a4 4 0 008 0 4 4 0 00-8 0zM7 4V2M7 10v2" stroke="var(--purple-300)" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <span style="font-size:var(--text-xs)">30-day returns</span>
+          </div>
+        </div>
+
         <!-- Product form -->
         {%- form 'product', product, id: product_form_id, data-atc-form: '' -%}
           <input type="hidden" name="id" value="{{ current_variant.id }}">
@@ -290,22 +310,6 @@
           </div>
         {%- endif -%}
 
-        <!-- Trust micro-signals -->
-        <div style="display:flex;flex-wrap:wrap;gap:var(--space-3)">
-          <div class="trust-item" style="gap:var(--space-2)">
-            <svg width="14" height="14" fill="none"><path d="M2 7l3.5 3.5 6.5-6" stroke="var(--purple-300)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span style="font-size:var(--text-xs)">Fitment guaranteed</span>
-          </div>
-          <div class="trust-item" style="gap:var(--space-2)">
-            <svg width="14" height="14" fill="none"><rect x="3" y="6" width="8" height="6" rx="1" stroke="var(--purple-300)" stroke-width="1.3"/><path d="M5 6V5a2 2 0 014 0v1" stroke="var(--purple-300)" stroke-width="1.3" stroke-linecap="round"/></svg>
-            <span style="font-size:var(--text-xs)">Secure checkout</span>
-          </div>
-          <div class="trust-item" style="gap:var(--space-2)">
-            <svg width="14" height="14" fill="none"><path d="M2 8a4 4 0 108 0 4 4 0 00-8 0zM7 4V2M7 10v2M3.5 4.5l1 1M9.5 9.5l1 1M3 7H1M13 7h-2" stroke="var(--purple-300)" stroke-width="1.3" stroke-linecap="round"/></svg>
-            <span style="font-size:var(--text-xs)">Express shipping</span>
-          </div>
-        </div>
-
       </div><!-- /product-info -->
     </div><!-- /product-layout -->
 
@@ -318,6 +322,9 @@
     <div id="reviews" style="margin-top:var(--space-12)">
       {%- render 'review-module', product: product -%}
     </div>
+
+    <!-- Related products -->
+    {%- render 'related-products', product: product, collection: collection -%}
 
   </div>
 </section>

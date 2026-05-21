@@ -429,8 +429,14 @@ class AddToCart {
         const variantId = btn.dataset.quickAdd;
         if (!variantId) return;
         btn.classList.add('is-loading');
-        await this._addToCart(variantId, 1);
-        btn.classList.remove('is-loading');
+        try {
+          await this._addToCart(variantId, 1);
+          showToast('Added to cart');
+        } catch {
+          showToast('Could not add to cart', 'error');
+        } finally {
+          btn.classList.remove('is-loading');
+        }
       });
     });
   }
@@ -639,6 +645,25 @@ class ProductGallery {
 
     // Lightbox on main image click
     this.mainImg?.addEventListener('click', () => this._openLightbox());
+
+    // Touch swipe on mobile
+    this._initSwipe();
+  }
+
+  _initSwipe() {
+    const main = this.gallery.querySelector('.product-gallery__main');
+    if (!main || !this.thumbs.length) return;
+    let startX = 0;
+    main.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+    main.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      if (Math.abs(dx) < 40) return;
+      const currentIdx = [...this.thumbs].findIndex(t => t.classList.contains('is-active'));
+      const nextIdx = dx < 0
+        ? Math.min(currentIdx + 1, this.thumbs.length - 1)
+        : Math.max(currentIdx - 1, 0);
+      if (nextIdx !== currentIdx) this._setActive(this.thumbs[nextIdx], nextIdx);
+    }, { passive: true });
   }
 
   _setActive(thumb, index) {
@@ -727,7 +752,15 @@ class SoundPlayer {
           if (a !== audio) { a.pause(); a.currentTime = 0; }
         });
 
-        audio.play().catch(() => {});
+        audio.play().catch((err) => {
+          console.warn('Audio playback failed:', err);
+          playing = false;
+          waveform?.classList.remove('is-playing');
+          this._updatePlayBtn(btn, false);
+          const origText = btn.querySelector('[data-icon-play]')?.nextSibling?.textContent;
+          btn.lastChild.textContent = ' Unavailable';
+          setTimeout(() => { if (btn.lastChild) btn.lastChild.textContent = ' Play Sound'; }, 2500);
+        });
         playing = true;
         waveform?.classList.add('is-playing');
         this._updatePlayBtn(btn, true);
@@ -783,7 +816,9 @@ class AnnouncementBar {
       }
     });
 
-    setInterval(() => this._next(), 4000);
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setInterval(() => this._next(), 4000);
+    }
   }
 
   _next() {
@@ -902,6 +937,9 @@ class VariantSelector {
       atcBtn.disabled = !match.available;
       atcBtn.textContent = match.available ? (atcBtn.dataset.defaultText || 'Add to Cart') : 'Out of Stock';
     }
+
+    // Sync sticky ATC
+    document.dispatchEvent(new CustomEvent('variant:change', { detail: match }));
   }
 
   _money(cents) {
@@ -910,6 +948,45 @@ class VariantSelector {
       currency: window.Shopify?.currency?.active || 'USD',
     }).format(cents / 100);
   }
+}
+
+/* ---------------------------------------------------------------------------
+   TOAST NOTIFICATION
+   --------------------------------------------------------------------------- */
+function showToast(message, type = 'success') {
+  let styleEl = document.getElementById('vault34-toast-styles');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'vault34-toast-styles';
+    styleEl.textContent = `
+      @keyframes toastIn  { from{opacity:0;transform:translateX(-50%) translateY(16px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+      @keyframes toastOut { from{opacity:1;transform:translateX(-50%) translateY(0)} to{opacity:0;transform:translateX(-50%) translateY(16px)} }
+    `;
+    document.head.appendChild(styleEl);
+  }
+
+  const toast = document.createElement('div');
+  const bg = type === 'error' ? '#ef4444' : 'var(--bg-elevated)';
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  toast.style.cssText = `
+    position:fixed;bottom:1.5rem;left:50%;z-index:9998;
+    background:${bg};color:var(--text-primary);
+    padding:.625rem 1.25rem;border-radius:9999px;
+    font-size:var(--text-sm);font-weight:var(--font-medium);
+    border:1px solid var(--border-subtle);box-shadow:0 8px 24px rgba(0,0,0,.4);
+    display:flex;align-items:center;gap:.5rem;white-space:nowrap;
+    animation:toastIn 0.25s ease forwards;pointer-events:none;
+  `;
+  const icon = type === 'error'
+    ? `<svg width="14" height="14" fill="none"><path d="M12 12L2 2M2 12L12 2" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`
+    : `<svg width="14" height="14" fill="none"><path d="M2 7l3.5 3.5 6.5-6" stroke="var(--purple-300)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  toast.innerHTML = icon + message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'toastOut 0.25s ease forwards';
+    setTimeout(() => toast.remove(), 260);
+  }, 2500);
 }
 
 /* ---------------------------------------------------------------------------
