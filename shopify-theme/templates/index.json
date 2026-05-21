@@ -6,7 +6,7 @@
         "msg1": {
           "type": "message",
           "settings": {
-            "text": "🚚 EU shipping — rates shown at checkout",
+            "text": "🚚 Worldwide shipping — rates shown at checkout",
             "cta": "Shop Now",
             "url": "/collections/all"
           }
@@ -54,7 +54,7 @@
     "trust": {
       "type": "trust-badges",
       "blocks": {
-        "t1": { "type": "trust_item", "settings": { "icon": "shipping", "title": "EU Shipping",          "subtitle": "Rates shown at checkout" }},
+        "t1": { "type": "trust_item", "settings": { "icon": "shipping", "title": "Worldwide Shipping",    "subtitle": "Rates shown at checkout" }},
         "t2": { "type": "trust_item", "settings": { "icon": "fitment",  "title": "Guaranteed Fit",      "subtitle": "500+ bike models" }},
         "t3": { "type": "trust_item", "settings": { "icon": "returns",  "title": "30-Day Returns",      "subtitle": "Hassle-free returns" }},
         "t4": { "type": "trust_item", "settings": { "icon": "warranty", "title": "Brand Warranty",      "subtitle": "Original manufacturer cover" }},
@@ -75,6 +75,7 @@
     "featured": {
       "type": "featured-collection",
       "settings": {
+        "collection": "all",
         "label": "Top Sellers",
         "title": "Best-Selling Exhaust Systems",
         "subtitle": "Handpicked from the best brands in performance exhausts",

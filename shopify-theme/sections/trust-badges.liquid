@@ -3,8 +3,8 @@
   Horizontal strip with icons, title, subtitle per trust signal.
 {%- endcomment -%}
 
-<div class="trust-strip reveal">
-  <div class="trust-strip__items">
+<div class="trust-strip reveal" style="width:100%;display:flex;justify-content:center">
+  <div class="trust-strip__items" style="justify-content:center;width:100%;max-width:var(--container-xl);margin-inline:auto">
     {%- for block in section.blocks -%}
       {%- if block.type == 'trust_item' -%}
         <div class="trust-item" {{ block.shopify_attributes }}>
@@ -70,7 +70,7 @@
           "type": "text",
           "id": "title",
           "label": "Title",
-          "default": "EU Shipping"
+          "default": "Worldwide Shipping"
         },
         {
           "type": "text",
@@ -85,7 +85,7 @@
     {
       "name": "Trust Badges",
       "blocks": [
-        { "type": "trust_item", "settings": { "icon": "shipping", "title": "EU Shipping",       "subtitle": "Rates shown at checkout" }},
+        { "type": "trust_item", "settings": { "icon": "shipping", "title": "Worldwide Shipping", "subtitle": "Rates shown at checkout" }},
         { "type": "trust_item", "settings": { "icon": "fitment",  "title": "Guaranteed Fit",    "subtitle": "500+ bike models" }},
         { "type": "trust_item", "settings": { "icon": "returns",  "title": "Easy Returns",      "subtitle": "30-day hassle-free" }},
         { "type": "trust_item", "settings": { "icon": "warranty", "title": "Brand Warranty",    "subtitle": "Terms vary by manufacturer" }},
