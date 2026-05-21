@@ -36,7 +36,7 @@
       "blocks": {
         "stat1": { "type": "stat", "settings": { "value": "500+", "label": "Bike Models" }},
         "stat2": { "type": "stat", "settings": { "value": "8+",   "label": "Top Brands" }},
-        "stat3": { "type": "stat", "settings": { "value": "EU",   "label": "Fast Shipping" }}
+        "stat3": { "type": "stat", "settings": { "value": "EU",   "label": "Fast from EU" }}
       },
       "block_order": ["stat1", "stat2", "stat3"],
       "settings": {
@@ -55,8 +55,8 @@
       "type": "trust-badges",
       "blocks": {
         "t1": { "type": "trust_item", "settings": { "icon": "shipping", "title": "Worldwide Shipping",    "subtitle": "Rates shown at checkout" }},
-        "t2": { "type": "trust_item", "settings": { "icon": "fitment",  "title": "Guaranteed Fit",      "subtitle": "500+ bike models" }},
-        "t3": { "type": "trust_item", "settings": { "icon": "returns",  "title": "30-Day Returns",      "subtitle": "Hassle-free returns" }},
+        "t2": { "type": "trust_item", "settings": { "icon": "fitment",  "title": "Guaranteed Fit",      "subtitle": "Multiple makes & models" }},
+        "t3": { "type": "trust_item", "settings": { "icon": "returns",  "title": "14-Day Returns",      "subtitle": "Hassle-free returns" }},
         "t4": { "type": "trust_item", "settings": { "icon": "warranty", "title": "Brand Warranty",      "subtitle": "Original manufacturer cover" }},
         "t5": { "type": "trust_item", "settings": { "icon": "secure",   "title": "Secure Checkout",     "subtitle": "SSL encrypted" }}
       },
@@ -105,7 +105,7 @@
       "blocks": {
         "bs1": { "type": "stat", "settings": { "value": "500+",  "label": "Models Supported" }},
         "bs2": { "type": "stat", "settings": { "value": "8+",    "label": "Top Brands" }},
-        "bs3": { "type": "stat", "settings": { "value": "EU",    "label": "Fast Shipping" }}
+        "bs3": { "type": "stat", "settings": { "value": "EU",    "label": "Fast from EU" }}
       },
       "block_order": ["bs1", "bs2", "bs3"],
       "settings": {
