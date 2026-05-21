@@ -136,12 +136,14 @@ class MobileMenu {
 
   open() {
     this.menu.classList.add('is-open');
+    document.body.classList.add('mobile-menu-open');
     document.body.style.overflow = 'hidden';
     document.querySelector('[data-mobile-menu-open]')?.setAttribute('aria-expanded', 'true');
   }
 
   close() {
     this.menu.classList.remove('is-open');
+    document.body.classList.remove('mobile-menu-open');
     document.body.style.overflow = '';
     document.querySelector('[data-mobile-menu-open]')?.setAttribute('aria-expanded', 'false');
   }

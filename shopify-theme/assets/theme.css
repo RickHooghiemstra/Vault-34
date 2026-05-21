@@ -1097,6 +1097,12 @@ h6, .h6 {
   transform: translateX(0);
 }
 
+/* Hide the sticky header behind the mobile menu overlay so the logo doesn't show twice */
+.mobile-menu-open .site-header,
+.mobile-menu-open .announcement-bar {
+  visibility: hidden;
+}
+
 .mobile-menu__header {
   display: flex;
   align-items: center;
