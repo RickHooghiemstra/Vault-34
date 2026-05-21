@@ -3,8 +3,8 @@
   Horizontal strip with icons, title, subtitle per trust signal.
 {%- endcomment -%}
 
-<div class="trust-strip reveal" style="width:100%;display:flex;justify-content:center">
-  <div class="trust-strip__items" style="justify-content:center;width:100%;max-width:var(--container-xl);margin-inline:auto">
+<div class="trust-strip reveal">
+  <div class="trust-strip__items">
     {%- for block in section.blocks -%}
       {%- if block.type == 'trust_item' -%}
         <div class="trust-item" {{ block.shopify_attributes }}>
@@ -40,17 +40,6 @@
     {%- endfor -%}
   </div>
 </div>
-
-<style>
-@media (max-width: 767px) {
-  .trust-strip__items {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-5);
-  }
-  .trust-strip__items > [aria-hidden="true"] { display: none; }
-}
-</style>
 
 {% schema %}
 {
