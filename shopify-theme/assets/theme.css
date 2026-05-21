@@ -2617,6 +2617,7 @@ h6, .h6 {
 
 .trust-strip__items {
   display: flex;
+  width: 100%;
   align-items: center;
   justify-content: center;
   gap: var(--space-8);
@@ -2661,13 +2662,23 @@ h6, .h6 {
 
 @media (max-width: 767px) {
   .trust-strip__items {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-5);
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: var(--space-6) var(--space-8);
     padding-inline: var(--space-4);
   }
   .trust-strip__items > [aria-hidden="true"] { display: none; }
-  .trust-item { justify-content: center; }
+  .trust-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-2);
+    width: 120px;
+  }
+  .trust-item__title { text-align: center; }
+  .trust-item__sub { text-align: center; }
 }
 
 /* Review card */
