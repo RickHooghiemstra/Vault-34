@@ -6,7 +6,7 @@
 {%- endcomment -%}
 
 {%- liquid
-  assign rating_value = product.metafields.reviews.rating.value | default: 4.8
+  assign rating_value = product.metafields.reviews.rating.value
   assign review_count = product.metafields.reviews.rating_count | default: 0
 -%}
 
@@ -81,31 +81,13 @@
         {%- endfor -%}
       </div>
     {%- else -%}
-      <!-- Placeholder reviews (design preview) -->
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3">
-        {%- assign sample_reviews = 'James H.,MT-09 2023,Incredible sound — neighbours aren't too happy but I am. Install was straightforward, quality is top tier.|Sarah K.,CBR600RR 2022,Replaced my OEM with this and couldn't be happier. Huge weight saving and the power delivery feels much more immediate.|Marcus T.,ZX-10R 2024,Track day machine. Sound is insane on the top end. Highly recommended for anyone wanting to wake up their bike.|Tom L.,R1 2021,Bought based on reviews and wasn't disappointed. Build quality looks and feels premium. Sounds absolutely savage.' | split: '|' -%}
-        {%- for review_data in sample_reviews -%}
-          {%- assign rv = review_data | split: ',' -%}
-          <article class="review-card">
-            <div class="review-card__header">
-              <div class="review-card__author">
-                <div class="review-card__avatar" aria-hidden="true">{{ rv[0] | slice: 0 | upcase }}</div>
-                <div>
-                  <div class="review-card__name">{{ rv[0] }}</div>
-                  <div class="review-card__bike">{{ rv[1] }}</div>
-                </div>
-              </div>
-              <div class="stars" aria-label="5 stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
-            </div>
-            <p class="review-card__body">{{ rv[2] }}</p>
-            <div class="review-card__footer">
-              <div class="review-verified">
-                <svg width="10" height="10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Verified Purchase
-              </div>
-            </div>
-          </article>
-        {%- endfor -%}
+      <!-- No reviews yet -->
+      <div style="text-align:center;padding:var(--space-12) var(--space-4);color:var(--text-subtle)">
+        <svg width="40" height="40" fill="none" style="margin:0 auto var(--space-4);display:block;opacity:.3">
+          <path d="M20 5l3.5 8h8.5l-7 5.5 2.5 8.5L20 22l-7.5 5 2.5-8.5L8 13h8.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+        <p style="font-size:var(--text-sm);margin-bottom:var(--space-2)">No reviews yet — be the first!</p>
+        <p style="font-size:var(--text-xs)">Share your experience and help other riders.</p>
       </div>
     {%- endif -%}
 

@@ -6,7 +6,7 @@
         "msg1": {
           "type": "message",
           "settings": {
-            "text": "🔥 Free worldwide shipping on orders over €199",
+            "text": "🚚 Free shipping on orders over €199",
             "cta": "Shop Now",
             "url": "/collections/all"
           }
@@ -14,15 +14,15 @@
         "msg2": {
           "type": "message",
           "settings": {
-            "text": "🏍️ Exhaust systems for 500+ bike models",
+            "text": "🏍️ Exhausts for 500+ bike models — find yours",
             "cta": "Find Your Fit",
-            "url": "/pages/fitment-finder"
+            "url": "/#fitment"
           }
         },
         "msg3": {
           "type": "message",
           "settings": {
-            "text": "⚡ Express dispatch — orders before 2pm ship same day"
+            "text": "📦 Orders shipped fast from the Netherlands"
           }
         }
       },
@@ -35,19 +35,18 @@
       "type": "hero",
       "blocks": {
         "stat1": { "type": "stat", "settings": { "value": "500+", "label": "Bike Models" }},
-        "stat2": { "type": "stat", "settings": { "value": "15k+", "label": "Happy Riders" }},
-        "stat3": { "type": "stat", "settings": { "value": "4.9★", "label": "Average Rating" }},
-        "stat4": { "type": "stat", "settings": { "value": "10yr", "label": "Warranty" }}
+        "stat2": { "type": "stat", "settings": { "value": "8+",   "label": "Top Brands" }},
+        "stat3": { "type": "stat", "settings": { "value": "EU",   "label": "Fast Shipping" }}
       },
-      "block_order": ["stat1", "stat2", "stat3", "stat4"],
+      "block_order": ["stat1", "stat2", "stat3"],
       "settings": {
-        "label": "Premium Exhaust Systems",
-        "headline": "Engineered for\nEvery Ride.|Louder. Lighter. Faster.",
-        "subheadline": "Premium performance exhaust systems, slip-ons, and full kits for over 500 motorcycle models. Built for enthusiasts who demand more.",
+        "label": "Performance Exhaust Specialist",
+        "headline": "Premium Exhausts for|Every Ride.",
+        "subheadline": "We curate the best performance exhaust systems from top brands like Akrapovic, Arrow, and Mivv — slip-ons, full systems, and more for over 500 motorcycle models.",
         "cta_primary_label": "Shop Exhausts",
         "cta_primary_url": "/collections/all",
         "cta_secondary_label": "Find My Fit",
-        "cta_secondary_url": "/pages/fitment-finder",
+        "cta_secondary_url": "/#fitment",
         "media_opacity": 35,
         "show_scroll": true
       }
@@ -55,12 +54,13 @@
     "trust": {
       "type": "trust-badges",
       "blocks": {
-        "t1": { "type": "trust_item", "settings": { "icon": "shipping", "title": "Free Shipping",    "subtitle": "On orders over €199" }},
-        "t2": { "type": "trust_item", "settings": { "icon": "fitment",  "title": "Guaranteed Fit",   "subtitle": "500+ bike models" }},
-        "t3": { "type": "trust_item", "settings": { "icon": "returns",  "title": "30-Day Returns",   "subtitle": "Hassle-free" }},
-        "t4": { "type": "trust_item", "settings": { "icon": "warranty", "title": "10-Year Warranty", "subtitle": "Industry-leading" }}
+        "t1": { "type": "trust_item", "settings": { "icon": "shipping", "title": "Free Shipping",       "subtitle": "On orders over €199" }},
+        "t2": { "type": "trust_item", "settings": { "icon": "fitment",  "title": "Guaranteed Fit",      "subtitle": "500+ bike models" }},
+        "t3": { "type": "trust_item", "settings": { "icon": "returns",  "title": "30-Day Returns",      "subtitle": "Hassle-free returns" }},
+        "t4": { "type": "trust_item", "settings": { "icon": "warranty", "title": "Brand Warranty",      "subtitle": "Original manufacturer cover" }},
+        "t5": { "type": "trust_item", "settings": { "icon": "secure",   "title": "Secure Checkout",     "subtitle": "SSL encrypted" }}
       },
-      "block_order": ["t1", "t2", "t3", "t4"],
+      "block_order": ["t1", "t2", "t3", "t4", "t5"],
       "settings": {}
     },
     "fitment": {
@@ -68,7 +68,7 @@
       "settings": {
         "title": "Find Parts for Your Bike",
         "subtitle": "Select your make, model and year to see exactly what fits.",
-        "hint": "Compatible with 500+ bike models — updated weekly",
+        "hint": "Compatible with 500+ bike models — updated regularly",
         "bg_style": "elevated"
       }
     },
@@ -77,7 +77,7 @@
       "settings": {
         "label": "Top Sellers",
         "title": "Best-Selling Exhaust Systems",
-        "subtitle": "Trusted by over 15,000 riders worldwide",
+        "subtitle": "Handpicked from the best brands in performance exhausts",
         "cta_label": "View All Products",
         "product_limit": 8,
         "columns": "4",
@@ -87,44 +87,45 @@
     "sound": {
       "type": "exhaust-sound",
       "blocks": {
-        "s1": { "type": "sound_config", "settings": { "label": "Stock",       "spec1_label": "Sound Level", "spec1_value": "89 dB",  "spec2_label": "Weight", "spec2_value": "3.8 kg", "spec3_label": "Power", "spec3_value": "Baseline" }},
-        "s2": { "type": "sound_config", "settings": { "label": "Slip-On",     "spec1_label": "Sound Level", "spec1_value": "96 dB",  "spec2_label": "Weight", "spec2_value": "1.9 kg", "spec3_label": "Power", "spec3_value": "+2 HP" }},
-        "s3": { "type": "sound_config", "settings": { "label": "Full System", "spec1_label": "Sound Level", "spec1_value": "104 dB", "spec2_label": "Weight", "spec2_value": "1.1 kg", "spec3_label": "Power", "spec3_value": "+8 HP" }},
-        "s4": { "type": "sound_config", "settings": { "label": "Race Baffle", "spec1_label": "Sound Level", "spec1_value": "110 dB", "spec2_label": "Weight", "spec2_value": "0.9 kg", "spec3_label": "Power", "spec3_value": "+10 HP" }}
+        "s1": { "type": "sound_config", "settings": { "label": "Stock",       "spec1_label": "Sound Level", "spec1_value": "~89 dB",  "spec2_label": "Weight", "spec2_value": "~3.8 kg", "spec3_label": "Power", "spec3_value": "Baseline" }},
+        "s2": { "type": "sound_config", "settings": { "label": "Slip-On",     "spec1_label": "Sound Level", "spec1_value": "~96 dB",  "spec2_label": "Weight", "spec2_value": "~1.9 kg", "spec3_label": "Power", "spec3_value": "+2 HP" }},
+        "s3": { "type": "sound_config", "settings": { "label": "Full System", "spec1_label": "Sound Level", "spec1_value": "~104 dB", "spec2_label": "Weight", "spec2_value": "~1.1 kg", "spec3_label": "Power", "spec3_value": "+8 HP" }},
+        "s4": { "type": "sound_config", "settings": { "label": "Race Baffle", "spec1_label": "Sound Level", "spec1_value": "~110 dB", "spec2_label": "Weight", "spec2_value": "~0.9 kg", "spec3_label": "Power", "spec3_value": "+10 HP" }}
       },
       "block_order": ["s1", "s2", "s3", "s4"],
       "settings": {
         "label": "Sound Demo",
         "title": "Hear the Difference",
-        "subtitle": "Experience how each configuration transforms your exhaust note — from refined daily to full race spec."
+        "subtitle": "Compare how each configuration changes your exhaust note — from stock to full race spec. Exact specs vary per product."
       }
     },
     "brand_story": {
       "type": "brand-story",
       "blocks": {
-        "bs1": { "type": "stat", "settings": { "value": "2009",  "label": "Founded" }},
-        "bs2": { "type": "stat", "settings": { "value": "500+",  "label": "Models Supported" }},
-        "bs3": { "type": "stat", "settings": { "value": "15k+",  "label": "Happy Riders" }},
-        "bs4": { "type": "stat", "settings": { "value": "4.9★",  "label": "Average Review" }}
+        "bs1": { "type": "stat", "settings": { "value": "500+",  "label": "Models Supported" }},
+        "bs2": { "type": "stat", "settings": { "value": "8+",    "label": "Top Brands" }},
+        "bs3": { "type": "stat", "settings": { "value": "EU",    "label": "Fast Shipping" }}
       },
-      "block_order": ["bs1", "bs2", "bs3", "bs4"],
+      "block_order": ["bs1", "bs2", "bs3"],
       "settings": {
         "label": "Our Story",
-        "title": "Built by Riders,\nFor Riders",
-        "badge_label": "Engineering",
-        "badge_text": "CNC titanium baffles. 2.3kg weight savings.",
+        "title": "A Family Business\nPassionate About Bikes",
+        "body": "<p>We're a small, family-run shop with one goal: helping riders find the right exhaust for their bike. We don't manufacture anything ourselves — instead, we carefully select and stock only the best brands so you get quality you can trust.</p>",
+        "body2": "<p>Whether you're after a subtle slip-on for daily riding or a full race system for track days, we'll help you find the right fit. Honest advice, no fluff.</p>",
+        "badge_label": "Our Selection",
+        "badge_text": "Akrapovic, Arrow, Mivv, LeoVince & more.",
         "cta_primary_label": "Shop Exhausts",
         "cta_primary_url": "/collections/all",
-        "cta_secondary_label": "Our Story",
+        "cta_secondary_label": "About Us",
         "cta_secondary_url": "/pages/about"
       }
     },
     "email": {
       "type": "email-signup",
       "settings": {
-        "label": "Join the Community",
-        "title": "Get Early Access to New Exhausts",
-        "subtitle": "Be first to know about new launches, exclusive rider deals, and setup guides.",
+        "label": "Stay in the Loop",
+        "title": "New Arrivals & Exclusive Deals",
+        "subtitle": "Be the first to hear about new exhausts, brand drops, and special offers — straight to your inbox.",
         "cta": "Get Updates",
         "show_incentives": true
       }
@@ -135,7 +136,7 @@
         "nav1": { "type": "nav_column", "settings": { "title": "Products", "menu": "footer-products" }},
         "nav2": { "type": "nav_column", "settings": { "title": "Support",  "menu": "footer-support" }},
         "nav3": { "type": "nav_column", "settings": { "title": "Company",  "menu": "footer-company" }},
-        "con1": { "type": "contact",    "settings": { "title": "Contact Us", "email": "support@vault34.com", "hours": "Mon–Fri, 9am–6pm CET" }}
+        "con1": { "type": "contact",    "settings": { "title": "Contact Us", "email": "support@vault34.com", "hours": "Mon–Fri, 9am–5pm CET" }}
       },
       "block_order": ["nav1", "nav2", "nav3", "con1"],
       "settings": {}

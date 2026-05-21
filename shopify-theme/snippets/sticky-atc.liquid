@@ -59,7 +59,7 @@
       <button
         class="btn btn-primary btn-lg"
         id="sticky-atc-btn"
-        data-default-text="{{ current_variant.available | ternary: 'Add to Cart', 'Sold Out' }}"
+        data-default-text="{%- if current_variant.available -%}Add to Cart{%- else -%}Sold Out{%- endif -%}"
         {%- unless current_variant.available -%}disabled{%- endunless -%}
       >
         <svg width="16" height="16" fill="none" aria-hidden="true">
